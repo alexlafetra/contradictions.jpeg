@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PLEASE NO CHANGES BELOW THIS LINE (UNTIL I SAY SO) -->
+  <script language="javascript" type="text/javascript" src="libraries/p5.min.js"></script>
+  <script language="javascript" type="text/javascript" src="jpg_secrets.js"></script>
+  <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Monsieur+La+Doulaise&display=swap" rel="stylesheet">
+  
+  <style>
+    html{
+      /* background-color: rgb(81, 105, 55); */
+      overflow: hidden;
+      /* background-image: url('data/Siphanta_acuta.jpg'); */
+      background-image: url('data/background.JPG');
+      background-size: cover;
+      image-rendering: pixelated;
+    }
+    body {
+      height:100%;
+      padding: 0;
+      margin: 0;
+      border:none;
+    }
+    #app_container{
+      width:100%;
+      height:100vh;
+      display:grid;
+      grid-template-columns: auto 500px;
+      grid-template-rows: 50px auto;
+      grid-template-areas: 
+      "toolbar text"
+      "image text";
+    }
+    #toolbar{
+      display:flex;
+      margin:5px;
+      z-index:2;
+    }
+    canvas{
+      cursor:pointer;
+      vertical-align: middle;
+    }
+    #canvas_container{
+      grid-area:image;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height:100%;
+      width:100%;
+    }
+    /* holds the input box and the output display */
+    #text_boxes_container{
+      grid-area:text;
+      display:flex;
+      flex-direction:column;
+      position:fixed;
+      right:0;
+      height:100%;
+      width:500px;
+    }
+    /* holds the title */
+    #secret_header{
+      font-family: "Monsieur La Doulaise", cursive;
+      font-size: 24pt;
+      text-align: center;
+      position:absolute;
+      display:block;
+      left:-183px;
+      z-index: 1;
+    }
+    .stretched_text{
+      transform:scale(2,1);
+      background-color: rgb(255, 0, 100);
+    }
+    /* holds the textArea element */
+    #secret_input{
+      font-family: 'Times New Roman', Times, serif;
+      resize:none;
+      width:100%;
+      min-height:6rem;
+      border:none;
+    }
+   #secret_input:focus{
+      outline:none;
+      background-color: yellow;
+    }
+    #binary_text_container{
+      width:100%;
+      height:calc(100%-80px);
+      overflow-y:scroll;
+      overflow-x: hidden;
+      font-family:monospace;
+      font-size: 8pt;
+      background-color: blue;
+      color: rgb(100,100,255);
+    }
+    #toolbar{
+      grid-area:toolbar;
+      cursor:pointer;
+      pointer-events: none;;
+    }
+    .toolbar_item{
+      padding-right:5px;
+      pointer-events: all;
+      min-width:50px;
+    }
+    #file_selector{
+      display:none;
+    }
+    #file_type_indicator{
+      display:flex;
+    }
+    #file_type_text{
+      transform:scale(1,4) translateY(12px);
+      color:white;
+      font-family:monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div id = "app_container">
+
+    <!-- toolbar holding save & load icons -->
+    <div id = "toolbar">
+      <img src = "data/xp_folder.png" class = "toolbar_item" title = "Enter an image file" style = "cursor:pointer;" onclick = "openFileSelector()">
+        <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImage(event)'/>
+      </img>
+      <!-- <div id = "file_type_indicator"> -->
+      <img id = "file_type_icon" title = "Save confession to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
+      <div id = "file_type_text">jpg</div>
+      <!-- </div> -->
+    </div>
+
+    <!-- container holding the p5 image canvas -->
+    <div id = "canvas_container">
+      <main></main>
+    </div>
+
+    <!-- container holding the header, the input textArea element, and the output div -->
+    <div id = "text_boxes_container">
+
+      <!-- header -->
+      <div id = "secret_header"><div class = "stretched_text">~confess here~</div></div>
+
+      <!-- input textArea element -->
+      <textarea id = "secret_input" oninput = 'enterText()'></textarea>
+
+      <!-- output text container -->
+      <div id = "binary_text_container">
+
+        <!-- error container  -->
+        <div id = "error_container" style="position:fixed;display:none;margin:auto">
+          <div id = "error_text" style = 'font-size:50pt;color:red;font-family:"Times New Roman", Times, serif;'></div>
+          <img id = "error_icon" src = "data/xp_error.png">
+        </div>
+
+        <!-- three text divs, for faster text setting -->
+        <div id = "text_start"></div>
+        <div id = "secret_text" style = "color:white;background-color: rgb(255,0,100);"></div>
+        <div id = "text_end"></div>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>
