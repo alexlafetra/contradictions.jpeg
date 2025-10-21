@@ -62,8 +62,8 @@
       font-size: 24pt;
       position:relative;
       display:block;
-      transform: scaleX(2) translateY(-10px);
-      right:20px;
+      transform: scaleX(2);
+      right:12px;
       height:fit-content;
       z-index: -1;
       color:black;
@@ -187,7 +187,7 @@
       <img src = "data/xp_folder.png" class = "toolbar_item" title = "Enter an image file" style = "cursor:pointer;" onclick = "openFileSelector()">
         <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImage(event)'/>
       </img>
-      <img id = "file_type_icon" title = "Save confession to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
+      <img id = "file_type_icon" title = "Save contradiction to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
       <div id = "file_type_text" class = "stretched_text">jpg</div>
       <div id = "coordinate_text" class = "stretched_text"></div>
     </div>
@@ -198,7 +198,7 @@
     </div>
 
     <!-- header -->
-    <div id = "secret_header">~confess here~</div>
+    <div id = "secret_header">~write here~</div>
 
     <!-- input textArea element -->
     <textarea id = "secret_input" oninput = 'submitText()'></textarea>

@@ -98,8 +98,8 @@ function windowResized(){
 async function loadNewImage(event){
 
   const files = event.target.files;
-  MIMEType = files[0].type;
-  document.getElementById("file_type_text").innerHTML = MIMEType.split('/')[1];
+  MIMEType = files[0].type.split('/')[1];
+  document.getElementById("file_type_text").innerHTML = MIMEType;
 
   //if there are files, read em!
   if (files && files.length) {
@@ -135,7 +135,7 @@ async function loadNewImage(event){
 }
 
 function saveImage(){
-  img.save(document.getElementById("secret_text").innerHTML);
+  img.save(document.getElementById("secret_text").innerHTML,MIMEType);
 }
 
 
@@ -150,7 +150,7 @@ function rerender(){
 
 //function that taxes pixel coords (x,y) and converts them to approximate string index coords
 function getStringIndexFromPixelCoords(x,y){
-  if(MIMEType == 'image/jpeg'){
+  if(MIMEType == 'jpeg'){
     //convert coords to pixel block coords
     const blockWidth = Math.ceil(img.width/8);
     const blockHeight = Math.ceil(img.height/8);
@@ -167,7 +167,7 @@ function getStringIndexFromPixelCoords(x,y){
 
     return approxByteIndex;
   }
-  else if(MIMEType == 'image/png'){
+  else if(MIMEType == 'png'){
     //png header is 29 bytes
     const bytesPerPixel = (binaryDataString.length - 29)/(img.width*img.height);
     const pixelIndex = y * width + x;
@@ -219,7 +219,7 @@ function recompileImage(dataString){
     byteData[i] = dataString.charCodeAt(i);
   }
   //convert uint8 array to blob, and then to dataURL
-  const blob = new Blob([byteData],{ type: MIMEType });
+  const blob = new Blob([byteData],{ type: 'image/'+MIMEType });
   const url = URL.createObjectURL(blob);
 
   img = loadImage(url,
@@ -252,7 +252,7 @@ function bufferToBinaryString(buffer){
 
 async function preload(){
   img = await loadImage(imageAddress);
-  MIMEType = 'image/jpeg';
+  MIMEType = 'jpeg';
 }
 
 function setup(){
