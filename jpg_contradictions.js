@@ -199,7 +199,7 @@ function submitText(){
   setInputText();
 }
 
-function mouseClicked(){
+function mousePressed(){
   if(mouseX<width && mouseY < height && mouseX > 0 && mouseY >0){
     textEntryCursor = {
       x:Math.trunc(mouseX),
