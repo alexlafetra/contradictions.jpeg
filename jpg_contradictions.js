@@ -1,3 +1,5 @@
+//jpeg confession algorithm
+
 const imageAddress = "data/clouds.jpeg";
 const imageSizeLimit = 350000; //300kB file size limit
 let headerSize = 0;
@@ -59,13 +61,26 @@ function readJpegHeader(bytes) {
 	return;
 }
 
+function compareStrings(str1,str2){
+  if(str1.length != str2.length)
+    console.log("strings different lengths!");
+  for(let i = 0; i<str1.length; i++){
+    if(str1.charAt(i) !== str2.charAt(i)){
+      console.log("1st difference at index "+i+" --> "+str1.charAt(i)+' != '+str2.charAt(i));
+      return;
+    }
+  }
+}
+
 function setErrorMessage(message){
-  document.getElementById("error_container").style.display =(window.innerWidth<1000)?"flex":"block";
-  document.getElementById("secret_text").innerHTML = message;
+  // document.getElementById("error_container").style.display =(window.innerWidth<1000)?"flex":"block";
+  // document.getElementById("secret_text").innerHTML = message;
+  // document.getElementById("test").src = "data/xp_error.png";
 }
 
 function clearError(){
-  document.getElementById("error_container").style.display = "none";
+  // document.getElementById("error_container").style.display = "none";
+  // recompileImage(binaryDataString);
 }
 
 function openFileSelector(){
@@ -73,26 +88,14 @@ function openFileSelector(){
 }
 
 function resizeImageAndCanvas(){
-    let sf_x = 1;
-    let sf_y = 1;
     const isMobile = (window.innerWidth<1000);
     const maxImageHeight = isMobile?(window.innerHeight - 450):(window.innerHeight - 250);
     const maxImageWidth = isMobile?(window.innerWidth):(window.innerWidth-500)
-    if(img.height > maxImageHeight){
-      sf_y = maxImageHeight/img.height;
-    }
-    if(img.width > maxImageWidth){
-      sf_x = maxImageWidth/img.width;
-    }
+    let sf_y = maxImageHeight/img.height;
+    let sf_x = maxImageWidth/img.width;
     const sf = Math.min(sf_x,sf_y);
-    resizeCanvas(img.width*sf,img.height*sf);
     document.body.style.setProperty("--image-width", width+"px");
     document.body.style.setProperty("--image-height", height+"px");
-    rerender();
-}
-
-function windowResized(){
-  resizeImageAndCanvas();
 }
 
 async function loadNewImage(event){
@@ -135,17 +138,33 @@ async function loadNewImage(event){
 }
 
 function saveImage(){
-  img.save(document.getElementById("secret_text").innerHTML,MIMEType);
+  const htmlTextInputElement = document.getElementById("secret_input");
+
+  //get object URL
+  const objectURL = stringToURL(binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index));
+
+  //trigger a download
+  const link = document.createElement('a');
+  link.href = objectURL;
+  link.download = 'confession.jpeg';  // desired filename
+  link.click();
 }
 
+function commitTextAndStartNewEntry(){
+  const htmlTextInputElement = document.getElementById("secret_input");
+  const newString = binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index);
+  htmlTextInputElement.value = "";
 
-function rerender(){
-  background(255);
-  image(img,-width/2,-height/2,width,height);
-  //cursor rectangle
-  fill(255,0,100,200);
-  noStroke();
-  rect(textEntryCursor.x-width/2,textEntryCursor.y-height/2,8,16)
+  //convert datastring to uint8 array
+  const byteData = new Uint8Array(newString.length);
+  //add a byte for each char to the byte array
+  for(let i = 0; i<newString.length; i++){
+    byteData[i] = newString.charCodeAt(i);
+  }
+  binaryDataString = bufferToBinaryString(byteData);
+
+  // console.log(buffer);
+  setDataText();
 }
 
 //function that taxes pixel coords (x,y) and converts them to approximate string index coords
@@ -171,34 +190,100 @@ function getStringIndexFromPixelCoords(x,y){
     //png header is 29 bytes
     const bytesPerPixel = (binaryDataString.length - 29)/(img.width*img.height);
     const pixelIndex = y * width + x;
-    const approxByteIndex = Math.trunc(bytesPerPixel*pixelIndex);
+    const approxByteIndex = Math.trunc(bytesPerPixel*pixelIndex*4);
     return approxByteIndex;
   }
 }
 
+//ONLY sets the secret text
 function setInputText(){
   //set the red, secret text & scroll to it
   const secretTextElement = document.getElementById("secret_text");
   secretTextElement.innerHTML = document.getElementById("secret_input").value;
   //scroll the div to show the text that was just set
-  secretTextElement.parentNode.scrollTop = secretTextElement.offsetTop - secretTextElement.parentNode.offsetTop;
+  // secretTextElement.parentNode.scrollTop = secretTextElement.offsetTop - secretTextElement.parentNode.offsetTop;
 
 }
 
+//sets the byte data text, and the secret text
 function setDataText(){
+
   //set the two chunks of text that won't change
   document.getElementById("text_start").innerHTML = binaryDataString.slice(0,textEntryCursor.index);
   document.getElementById("text_end").innerHTML = binaryDataString.slice(textEntryCursor.index);
-  setInputText();
+  document.getElementById("secret_text").innerHTML = document.getElementById("secret_input").value;
+  // setInputText();
 }
 
 //called by the onclick event of the "enter" button
 function submitText(){
   const htmlTextInputElement = document.getElementById("secret_input");
   recompileImage(binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index));
-  setInputText();
 }
 
+function slideByteIndex(event){
+  if(mouseIsPressed){
+    //total width of the scrollbar
+    const targetWidth = event.srcElement.clientWidth;
+    //location of click within scrollbar
+    const clickPos = event.offsetX;
+
+  
+    textEntryCursor.index = binaryDataString.length*clickPos/targetWidth;
+    textEntryCursor.x = textEntryCursor.index%img.width;
+    textEntryCursor.y = Math.trunc(textEntryCursor.index/img.width);
+    document.body.style.setProperty("--byte-index-percent",clickPos/targetWidth);
+
+    // const text = document.getElementById('binary_text_container');
+    // text.scrollTop = text.scrollHeight * clickPos/targetWidth + 20;
+    submitText();
+  }
+}
+
+function scrollByteIndex(event){
+
+  let ratio = 0.0;
+  //if it's to the top
+  if(event.target.scrollTop < event.target.clientHeight/2)
+    ratio = (event.target.scrollTop)/event.target.scrollHeight;
+  else
+    ratio = (event.target.scrollTop+(event.target.clientHeight/2))/event.target.scrollHeight;
+  textEntryCursor.index = binaryDataString.length*ratio;
+  document.body.style.setProperty("--byte-index-percent",ratio);
+
+  //disable onscroll listener
+  setDataText();
+  submitText();
+}
+
+function keyPressed(){
+  let newEntryCoords = {x:textEntryCursor.x,y:textEntryCursor.y};
+  if(keyCode == UP_ARROW){
+    newEntryCoords.y = Math.max(0,(newEntryCoords.y - 1)%img.height);
+  }
+  else if(keyCode == DOWN_ARROW){
+    newEntryCoords.y = (newEntryCoords.y + 1)%img.height;
+  }
+  else if(keyCode == LEFT_ARROW){
+    newEntryCoords.x = Math.max(0,(newEntryCoords.x - 1)%img.width);
+  }
+  else if(keyCode == RIGHT_ARROW){
+    newEntryCoords.x = (newEntryCoords.x + 1)%img.width;
+  }
+  //if the cursor changed, update everything
+  if(newEntryCoords.x != textEntryCursor.x || newEntryCoords.y != textEntryCursor.y){
+    textEntryCursor.x = newEntryCoords.x;
+    textEntryCursor.y = newEntryCoords.y;
+    textEntryCursor.index = getStringIndexFromPixelCoords(textEntryCursor.x,textEntryCursor.y);
+    document.body.style.setProperty("--byte-index-percent",textEntryCursor.index/(img.width*img.height));
+    submitText();
+  }
+}
+
+function mouseMoved(){
+  if(mouseIsPressed)
+    mousePressed();
+}
 function mousePressed(){
   if(mouseX<width && mouseY < height && mouseX > 0 && mouseY >0){
     textEntryCursor = {
@@ -212,34 +297,35 @@ function mousePressed(){
   }
 }
 
-function recompileImage(dataString){
+function stringToURL(dataString){
   //convert datastring to uint8 array
   const byteData = new Uint8Array(dataString.length);
+  //add a byte for each char to the byte array
   for(let i = 0; i<dataString.length; i++){
     byteData[i] = dataString.charCodeAt(i);
   }
   //convert uint8 array to blob, and then to dataURL
   const blob = new Blob([byteData],{ type: 'image/'+MIMEType });
-  const url = URL.createObjectURL(blob);
+  return URL.createObjectURL(blob);
+}
 
-  img = loadImage(url,
-  //successful load callback
-  ()=>{
-    //draw the new image, when it's ready
-    rerender();
-    //delete url
-    URL.revokeObjectURL(url);
-    clearError();
-  },
-  //error callback
-  (error) => {
+function recompileImage(dataString){
+  const url = stringToURL(dataString);
+  const newImg = document.createElement('img');
+  //add an error event listener
+  newImg.addEventListener("error", (event) => {
     setErrorMessage("error writing image: corrupted header or your confession was a little too honest :)");
-    console.log("uh oh!",error);
   });
+  
+  newImg.src = url;
+  newImg.onload = () => {
+    clearError();
+    document.getElementById('test').src = newImg.src;
+    URL.revokeObjectURL(url);
+  }
 }
 
 function bufferToBinaryString(buffer){
-
   let binaryString = '';
   const bytes = new Uint8Array(buffer);
   readJpegHeader(bytes);
@@ -259,12 +345,14 @@ function setup(){
   //get the image as a text string
   fetch(imageAddress)
     .then(result => result.arrayBuffer())
-    .then(buffer => {
-      binaryDataString = bufferToBinaryString(buffer);
+    .then(buffer => {      binaryDataString = bufferToBinaryString(buffer);
       setDataText();
+      recompileImage(binaryDataString);
     });
-  createCanvas(img.width,img.height,WEBGL);
-  resizeImageAndCanvas(img);
-  rerender();
+  noCanvas();
   noLoop();
 }
+
+/*okay so the problem is that i 
+want to save a jpeg and open it in a text editor and see the text i wrote into it
+*/

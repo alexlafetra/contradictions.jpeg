@@ -17,38 +17,42 @@
     html{
       /* background-color: rgb(81, 105, 55); */
       overflow: hidden;
-      background-image: url('data/background.JPG');
+      /* background-image: url('data/background.JPG'); */
+      background-color: #ffffff;
       image-rendering: pixelated;
       --image-width:100px;
       --image-height:100px;
+      --byte-index-percent:0.0;
     }
     body {
       height:100%;
       padding: 0;
       margin: 0;
       border:none;
+      image-rendering: pixelated;
+    }
+    #test{
+      width:100%;
     }
     #app_container{
       width:100%;
       height:100vh;
       display:grid;
       grid-template-columns: minmax(var(--image-width),auto) 500px;
-      grid-template-rows: 50px 200px auto;
+      grid-template-rows: 50px 200px 20px auto;
       grid-template-areas: 
         "toolbar textinput"
         "image textinput"
+        "image bytescrollbar"
         "image textoutput";
-    }
-    #toolbar{
-      display:flex;
-      margin:5px;
-      z-index:2;
     }
     canvas{
       cursor:pointer;
       vertical-align: middle;
+      image-rendering: pixelated;
     }
     #canvas_container{
+      image-rendering: pixelated;
       grid-area:image;
       display: flex;
       align-items: center;
@@ -71,12 +75,27 @@
       grid-area:textinput;
     }
     /* holds the textArea element */
-    #secret_input{
+    #secret_input_holder{
+      position:relative;
       grid-area:textinput;
+      display:block;
+      width:100%;
+      min-height:6rem;
+    }
+    #secret_input_holder img{
+      width:30px;
+      position:absolute;
+      left:0;
+      /* right:0; */
+      /* top:0; */
+      bottom:0;
+    }
+    #secret_input{
       font-family: 'Times New Roman', Times, serif;
       resize:none;
       width:100%;
-      min-height:6rem;
+      /* min-height:6rem; */
+      height:100%;
       border:none;
     }
    #secret_input:focus{
@@ -84,7 +103,20 @@
       background-color: yellow;
     }
 
-
+    #byte_scrollbar_container{
+      grid-area:bytescrollbar;
+      width:100%;
+      height:100%;
+      background-color: blue;
+      cursor:pointer;
+    }
+    #byte_scrollbar_pre{
+      width: calc(var(--byte-index-percent)*100%);
+      height:100%;
+      background-color: rgb(255,0,100);
+      pointer-events: none;
+    }
+    
     #binary_text_container{
       grid-area:textoutput;
       overflow-y:scroll;
@@ -93,11 +125,15 @@
       font-size: 8pt;
       background-color: blue;
       color: rgb(100,100,255);
+      scroll-behavior: auto; /* Explicitly sets instant scrolling, though it's the default */
     }
     #toolbar{
       grid-area:toolbar;
       cursor:pointer;
-      pointer-events: none;;
+      pointer-events: none;
+      display:flex;
+      margin:5px;
+      z-index:2;
     }
     .toolbar_item{
       padding-right:5px;
@@ -118,6 +154,12 @@
       display:none;
       margin:auto;
       z-index:1;
+      pointer-events: none;
+    }
+    #confession_booth{
+      position:absolute;
+      left:0;
+      top:0;
     }
     @media (max-width:1000px){
       html{
@@ -128,11 +170,13 @@
         height:100vh;
         display:grid;
         grid-template-columns: 100%;
-        grid-template-rows: 50px 200px auto 200px;
+        grid-template-rows: 50px auto auto 50px auto;
+        
         grid-template-areas: 
           "toolbar"
           "textinput"
           "image"
+          "bytescrollbar"
           "textoutput";
       }
       #toolbar{
@@ -194,17 +238,24 @@
 
     <!-- container holding the p5 image canvas -->
     <div id = "canvas_container">
-      <main></main>
+      <img id = "test">
     </div>
 
     <!-- header -->
     <div id = "secret_header">~write here~</div>
 
+    <!-- <img id = "confession_booth" src = 'data/confessional.png'> -->
     <!-- input textArea element -->
-    <textarea id = "secret_input" oninput = 'submitText()'></textarea>
+    <div id = "secret_input_holder">
+      <textarea id = "secret_input" oninput = 'submitText()'></textarea>
+      <img title = "Write confession to file" style = "cursor:pointer;" onclick = 'commitTextAndStartNewEntry()' src = "data/xp_upload_icon.png">
+    </div>
+    <div id = "byte_scrollbar_container" onmousemove = "slideByteIndex(event)">
+      <div id = "byte_scrollbar_pre"></div>
+    </div>
 
     <!-- output text container -->
-    <div id = "binary_text_container">
+    <div id = "binary_text_container" onscroll="scrollByteIndex(event)">
 
         <!-- error container  -->
       <div id = "error_container">
