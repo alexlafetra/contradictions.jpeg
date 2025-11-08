@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" >
 
   <!-- PLEASE NO CHANGES BELOW THIS LINE (UNTIL I SAY SO) -->
-  <script language="javascript" type="text/javascript" src="libraries/p5.min.js"></script>
   <script language="javascript" type="text/javascript" src="jpg_contradictions.js"></script>
   <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
   
@@ -41,7 +40,7 @@
       grid-template-columns: minmax(var(--image-width),auto) 500px;
       grid-template-rows: 50px 200px 20px auto;
       grid-template-areas: 
-        "toolbar textinput"
+        "image toolbar"
         "image textinput"
         "image bytescrollbar"
         "image textoutput";
@@ -67,12 +66,13 @@
       position:relative;
       display:block;
       transform: scaleX(2);
-      right:12px;
+      margin-left:60px;
+      /* right:12px; */
       height:fit-content;
       z-index: -1;
       color:black;
       background:rgb(255,0,100);
-      grid-area:textinput;
+      /* grid-area:toolbar; */
     }
     /* holds the textArea element */
     #secret_input_holder{
@@ -82,21 +82,13 @@
       width:100%;
       min-height:6rem;
     }
-    #secret_input_holder img{
-      width:30px;
-      position:absolute;
-      left:0;
-      /* right:0; */
-      /* top:0; */
-      bottom:0;
-    }
     #secret_input{
       font-family: 'Times New Roman', Times, serif;
       resize:none;
       width:100%;
       /* min-height:6rem; */
       height:100%;
-      border:none;
+      border:1px dashed black;
     }
    #secret_input:focus{
       outline:none;
@@ -126,6 +118,7 @@
       background-color: blue;
       color: rgb(100,100,255);
       scroll-behavior: auto; /* Explicitly sets instant scrolling, though it's the default */
+      user-select: none;
     }
     #toolbar{
       grid-area:toolbar;
@@ -184,21 +177,6 @@
         cursor:pointer;
         pointer-events: none;;
       }
-      #secret_header{
-        font-family: "Monsieur La Doulaise", cursive;
-        font-size: 24pt;
-        position:absolute;
-        display:block;
-        transform: scaleX(2) translateX(-20px);
-        /* right:60px; */
-        /* float:right; */
-        top:0px;
-        height:fit-content;
-        z-index: -1;
-        color:black;
-        background:rgb(255,0,100);
-        grid-area:textinput;
-      }
       #binary_text_container{
         grid-area:textoutput;
         overflow-y:scroll;
@@ -232,8 +210,11 @@
         <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImage(event)'/>
       </img>
       <img id = "file_type_icon" title = "Save contradiction to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
-      <div id = "file_type_text" class = "stretched_text">jpg</div>
-      <div id = "coordinate_text" class = "stretched_text"></div>
+      <!-- <div id = "file_type_text" class = "stretched_text">jpg</div>
+      <div id = "coordinate_text" class = "stretched_text"></div> -->
+      <img title = "Write confession to file" style = "cursor:pointer;" class = "toolbar_item"  onclick = 'commitTextAndStartNewEntry()' src = "data/xp_upload_icon.png">
+      <!-- header -->
+      <div id = "secret_header" class = "toolbar_item">~confess~</div>
     </div>
 
     <!-- container holding the p5 image canvas -->
@@ -241,16 +222,14 @@
       <img id = "test">
     </div>
 
-    <!-- header -->
-    <div id = "secret_header">~write here~</div>
+    
 
     <!-- <img id = "confession_booth" src = 'data/confessional.png'> -->
     <!-- input textArea element -->
     <div id = "secret_input_holder">
       <textarea id = "secret_input" oninput = 'submitText()'></textarea>
-      <img title = "Write confession to file" style = "cursor:pointer;" onclick = 'commitTextAndStartNewEntry()' src = "data/xp_upload_icon.png">
     </div>
-    <div id = "byte_scrollbar_container" onmousemove = "slideByteIndex(event)">
+    <div id = "byte_scrollbar_container" onmousemove = "slideByteIndex(event)"  onmouseup ="sliderUnclickHandler()" onmousedown="sliderClickHandler()">
       <div id = "byte_scrollbar_pre"></div>
     </div>
 

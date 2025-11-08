@@ -4,7 +4,6 @@ const imageAddress = "data/clouds.jpeg";
 const imageSizeLimit = 350000; //300kB file size limit
 let headerSize = 0;
 let MIMEType = "";
-let img;
 let textEntryCursor = {
   index : 40000,
   x:0,
@@ -102,7 +101,7 @@ async function loadNewImage(event){
 
   const files = event.target.files;
   MIMEType = files[0].type.split('/')[1];
-  document.getElementById("file_type_text").innerHTML = MIMEType;
+  // document.getElementById("file_type_text").innerHTML = MIMEType;
 
   //if there are files, read em!
   if (files && files.length) {
@@ -112,17 +111,6 @@ async function loadNewImage(event){
       return;
     }
     clearError();
-    const reader_image = new FileReader();
-    //when file reader is done, use p5js to load the file
-    reader_image.addEventListener("load",() => {
-      //when the image is loaded, resize canvas and rerender
-      //Also, get a new binary string!
-      loadImage(reader_image.result,(newImg)=>{
-        img = newImg;
-        resizeImageAndCanvas(img);
-      });
-    });
-    reader_image.readAsDataURL(files[0]);
 
     //add a second reader
     const reader_data = new FileReader();
@@ -130,6 +118,7 @@ async function loadNewImage(event){
       const buffer = reader_data.result;
       binaryDataString = bufferToBinaryString(buffer);
       setDataText();
+      submitText();
     })
     reader_data.readAsArrayBuffer(files[0]);
   }
@@ -221,6 +210,14 @@ function submitText(){
   recompileImage(binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index));
 }
 
+let mouseIsPressed = false;
+
+function sliderClickHandler(){
+  mouseIsPressed = true;
+}
+function sliderUnclickHandler(){
+  mouseIsPressed = false;
+}
 function slideByteIndex(event){
   if(mouseIsPressed){
     //total width of the scrollbar
@@ -228,7 +225,7 @@ function slideByteIndex(event){
     //location of click within scrollbar
     const clickPos = event.offsetX;
 
-  
+    const img = document.getElementById('test');
     textEntryCursor.index = binaryDataString.length*clickPos/targetWidth;
     textEntryCursor.x = textEntryCursor.index%img.width;
     textEntryCursor.y = Math.trunc(textEntryCursor.index/img.width);
@@ -244,7 +241,7 @@ function scrollByteIndex(event){
 
   let ratio = 0.0;
   //if it's to the top
-  if(event.target.scrollTop < event.target.clientHeight/2)
+  if(event.target.scrollTop < event.target.clientHeight)
     ratio = (event.target.scrollTop)/event.target.scrollHeight;
   else
     ratio = (event.target.scrollTop+(event.target.clientHeight/2))/event.target.scrollHeight;
@@ -254,47 +251,6 @@ function scrollByteIndex(event){
   //disable onscroll listener
   setDataText();
   submitText();
-}
-
-function keyPressed(){
-  let newEntryCoords = {x:textEntryCursor.x,y:textEntryCursor.y};
-  if(keyCode == UP_ARROW){
-    newEntryCoords.y = Math.max(0,(newEntryCoords.y - 1)%img.height);
-  }
-  else if(keyCode == DOWN_ARROW){
-    newEntryCoords.y = (newEntryCoords.y + 1)%img.height;
-  }
-  else if(keyCode == LEFT_ARROW){
-    newEntryCoords.x = Math.max(0,(newEntryCoords.x - 1)%img.width);
-  }
-  else if(keyCode == RIGHT_ARROW){
-    newEntryCoords.x = (newEntryCoords.x + 1)%img.width;
-  }
-  //if the cursor changed, update everything
-  if(newEntryCoords.x != textEntryCursor.x || newEntryCoords.y != textEntryCursor.y){
-    textEntryCursor.x = newEntryCoords.x;
-    textEntryCursor.y = newEntryCoords.y;
-    textEntryCursor.index = getStringIndexFromPixelCoords(textEntryCursor.x,textEntryCursor.y);
-    document.body.style.setProperty("--byte-index-percent",textEntryCursor.index/(img.width*img.height));
-    submitText();
-  }
-}
-
-function mouseMoved(){
-  if(mouseIsPressed)
-    mousePressed();
-}
-function mousePressed(){
-  if(mouseX<width && mouseY < height && mouseX > 0 && mouseY >0){
-    textEntryCursor = {
-      x:Math.trunc(mouseX),
-      y:Math.trunc(mouseY),
-      index : getStringIndexFromPixelCoords(mouseX,mouseY)
-    };
-    document.getElementById("coordinate_text").innerHTML = '('+textEntryCursor.x+","+textEntryCursor.y+')';
-    submitText();
-    setDataText();
-  }
 }
 
 function stringToURL(dataString){
@@ -336,22 +292,19 @@ function bufferToBinaryString(buffer){
   return binaryString;
 }
 
-async function preload(){
-  img = await loadImage(imageAddress);
-  MIMEType = 'jpeg';
-}
-
 function setup(){
   //get the image as a text string
   fetch(imageAddress)
     .then(result => result.arrayBuffer())
-    .then(buffer => {      binaryDataString = bufferToBinaryString(buffer);
+    .then(buffer => {
+      MIMEType = 'jpeg';
+      binaryDataString = bufferToBinaryString(buffer);
       setDataText();
       recompileImage(binaryDataString);
     });
-  noCanvas();
-  noLoop();
 }
+
+window.onload = () => setup();
 
 /*okay so the problem is that i 
 want to save a jpeg and open it in a text editor and see the text i wrote into it
