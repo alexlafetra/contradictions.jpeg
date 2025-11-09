@@ -1,7 +1,11 @@
 //jpeg confession algorithm
 
 const imageAddress = "data/clouds.jpeg";
-const imageSizeLimit = 350000; //300kB file size limit
+// const imageSizeLimit = 350000; //300kB file size limit
+const imageSizeLimit = 350000000; //300kB file size limit
+const maxHeight = 400;
+const maxWidth = 400;
+let imageDimensions = {width:0,height:0};
 let headerSize = 0;
 let MIMEType = "";
 let textEntryCursor = {
@@ -9,8 +13,8 @@ let textEntryCursor = {
   x:0,
   y:0
 };
-
 let binaryDataString = "";
+let mouseIsPressed = false;
 
 //from: https://viereck.ch/jpeg-header/jpeg-header.js
 // Author: Thomas Lochmatter, thomas.lochmatter@viereck.ch
@@ -50,6 +54,8 @@ function readJpegHeader(bytes) {
 			data.components = bytes[pos + 7];
       data.headerSize = pos;
       headerSize = pos;
+      // headerSize = 1000;
+      console.log(headerSize);
 			return data;
 		}
 
@@ -60,26 +66,13 @@ function readJpegHeader(bytes) {
 	return;
 }
 
-function compareStrings(str1,str2){
-  if(str1.length != str2.length)
-    console.log("strings different lengths!");
-  for(let i = 0; i<str1.length; i++){
-    if(str1.charAt(i) !== str2.charAt(i)){
-      console.log("1st difference at index "+i+" --> "+str1.charAt(i)+' != '+str2.charAt(i));
-      return;
-    }
-  }
-}
-
 function setErrorMessage(message){
-  // document.getElementById("error_container").style.display =(window.innerWidth<1000)?"flex":"block";
+  document.getElementById("error_container").style.display =(window.innerWidth<1000)?"flex":"block";
   // document.getElementById("secret_text").innerHTML = message;
-  // document.getElementById("test").src = "data/xp_error.png";
 }
 
 function clearError(){
-  // document.getElementById("error_container").style.display = "none";
-  // recompileImage(binaryDataString);
+  document.getElementById("error_container").style.display = "none";
 }
 
 function openFileSelector(){
@@ -87,17 +80,20 @@ function openFileSelector(){
 }
 
 function resizeImageAndCanvas(){
-    const isMobile = (window.innerWidth<1000);
-    const maxImageHeight = isMobile?(window.innerHeight - 450):(window.innerHeight - 250);
-    const maxImageWidth = isMobile?(window.innerWidth):(window.innerWidth-500)
-    let sf_y = maxImageHeight/img.height;
-    let sf_x = maxImageWidth/img.width;
-    const sf = Math.min(sf_x,sf_y);
-    document.body.style.setProperty("--image-width", width+"px");
-    document.body.style.setProperty("--image-height", height+"px");
+  const isMobile = (window.innerWidth<800);
+  const maxImageHeight = isMobile?(window.innerHeight - 450):(window.innerHeight);
+  const maxImageWidth = isMobile?(window.innerWidth):(window.innerWidth-500)
+  const img = document.getElementById('main_image');
+  let sf_y = maxImageHeight/imageDimensions.height;
+  let sf_x = maxImageWidth/imageDimensions.width;
+  const sf = Math.min(sf_x,sf_y);
+  document.body.style.setProperty("--image-width", sf*imageDimensions.width+"px");
+  document.body.style.setProperty("--image-height", sf*imageDimensions.height+"px");
+  img.width = imageDimensions.width * sf;
+  img.height = imageDimensions.height * sf;
 }
 
-async function loadNewImage(event){
+function loadNewImageFromFile(event){
 
   const files = event.target.files;
   MIMEType = files[0].type.split('/')[1];
@@ -112,13 +108,11 @@ async function loadNewImage(event){
     }
     clearError();
 
-    //add a second reader
+    //read in the file
     const reader_data = new FileReader();
     reader_data.addEventListener("load",() => {
       const buffer = reader_data.result;
-      binaryDataString = bufferToBinaryString(buffer);
-      setDataText();
-      submitText();
+      loadNewImage(buffer);
     })
     reader_data.readAsArrayBuffer(files[0]);
   }
@@ -201,16 +195,14 @@ function setDataText(){
   document.getElementById("text_start").innerHTML = binaryDataString.slice(0,textEntryCursor.index);
   document.getElementById("text_end").innerHTML = binaryDataString.slice(textEntryCursor.index);
   document.getElementById("secret_text").innerHTML = document.getElementById("secret_input").value;
-  // setInputText();
 }
 
 //called by the onclick event of the "enter" button
 function submitText(){
   const htmlTextInputElement = document.getElementById("secret_input");
+  document.getElementById("secret_text").innerHTML = htmlTextInputElement.value;
   recompileImage(binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index));
 }
-
-let mouseIsPressed = false;
 
 function sliderClickHandler(){
   mouseIsPressed = true;
@@ -225,8 +217,10 @@ function slideByteIndex(event){
     //location of click within scrollbar
     const clickPos = event.offsetX;
 
-    const img = document.getElementById('test');
-    textEntryCursor.index = binaryDataString.length*clickPos/targetWidth;
+    const img = document.getElementById('main_image');
+    // textEntryCursor.index = binaryDataString.length*clickPos/targetWidth;
+    textEntryCursor.index = Math.trunc((binaryDataString.length-headerSize)*clickPos/targetWidth)+headerSize;
+    console.log(textEntryCursor.index);
     textEntryCursor.x = textEntryCursor.index%img.width;
     textEntryCursor.y = Math.trunc(textEntryCursor.index/img.width);
     document.body.style.setProperty("--byte-index-percent",clickPos/targetWidth);
@@ -245,7 +239,8 @@ function scrollByteIndex(event){
     ratio = (event.target.scrollTop)/event.target.scrollHeight;
   else
     ratio = (event.target.scrollTop+(event.target.clientHeight/2))/event.target.scrollHeight;
-  textEntryCursor.index = binaryDataString.length*ratio;
+  // textEntryCursor.index = binaryDataString.length*ratio;
+    textEntryCursor.index = Math.trunc((binaryDataString.length-headerSize)*ratio)+headerSize;
   document.body.style.setProperty("--byte-index-percent",ratio);
 
   //disable onscroll listener
@@ -261,7 +256,8 @@ function stringToURL(dataString){
     byteData[i] = dataString.charCodeAt(i);
   }
   //convert uint8 array to blob, and then to dataURL
-  const blob = new Blob([byteData],{ type: 'image/'+MIMEType });
+  // const blob = new Blob([byteData],{ type: 'image/'+MIMEType });
+  const blob = new Blob([byteData],{ type: 'image/jpeg'});
   return URL.createObjectURL(blob);
 }
 
@@ -271,12 +267,39 @@ function recompileImage(dataString){
   //add an error event listener
   newImg.addEventListener("error", (event) => {
     setErrorMessage("error writing image: corrupted header or your confession was a little too honest :)");
+    console.log("error writing image: corrupted header or your confession was a little too honest :)");
   });
   
   newImg.src = url;
   newImg.onload = () => {
+    //resize image if it's too big
+    // if(newImg.width > maxWidth || newImg.height > maxHeight){
+    //   console.log('resizing image')
+    //   const sf = Math.min(maxHeight/newImg.height,maxWidth/newImg.width);
+    //   const newDims = {w:sf*newImg.width,h:sf*newImg.height};
+    //   //create a canvas element, resize it to the correct resolution
+    //   const canvas = document.createElement('canvas');
+    //   canvas.width = newDims.w;
+    //   canvas.height = newDims.h;
+    //   //draw the image at that resolution
+    //   const ctx = canvas.getContext('2d');
+    //   ctx.drawImage(newImg, 0, 0, canvas.width, canvas.height);
+      
+    //   //reset this image
+    //   canvas.toBlob((blob) => {
+    //     const fileReader = new FileReader();
+    //     fileReader.onload = function(event){
+    //       loadNewImage(event.target.result);
+    //     }
+    //     fileReader.readAsArrayBuffer(blob);
+    //   },'image/jpeg',1.0);
+
+    //   return;
+    // }
     clearError();
-    document.getElementById('test').src = newImg.src;
+    document.getElementById('main_image').src = newImg.src;
+    imageDimensions = {width:newImg.width,height:newImg.height};
+    resizeImageAndCanvas();
     URL.revokeObjectURL(url);
   }
 }
@@ -292,20 +315,24 @@ function bufferToBinaryString(buffer){
   return binaryString;
 }
 
+function loadNewImage(buffer){
+  binaryDataString = bufferToBinaryString(buffer);
+  setDataText();
+  submitText();
+}
+
 function setup(){
   //get the image as a text string
   fetch(imageAddress)
     .then(result => result.arrayBuffer())
     .then(buffer => {
       MIMEType = 'jpeg';
-      binaryDataString = bufferToBinaryString(buffer);
-      setDataText();
-      recompileImage(binaryDataString);
+      loadNewImage(buffer);
     });
 }
 
 window.onload = () => setup();
-
+window.onresize = () => resizeImageAndCanvas();
 /*okay so the problem is that i 
 want to save a jpeg and open it in a text editor and see the text i wrote into it
 */

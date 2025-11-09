@@ -14,24 +14,21 @@
   
   <style>
     html{
-      /* background-color: rgb(81, 105, 55); */
       overflow: hidden;
-      /* background-image: url('data/background.JPG'); */
       background-color: #ffffff;
-      image-rendering: pixelated;
+
       --image-width:100px;
       --image-height:100px;
       --byte-index-percent:0.0;
-    }
-    body {
-      height:100%;
-      padding: 0;
-      margin: 0;
-      border:none;
-      image-rendering: pixelated;
-    }
-    #test{
       width:100%;
+    }
+
+    body {
+      width: 100%;
+      margin:0;
+    }
+    #main_image{
+
     }
     #app_container{
       width:100%;
@@ -66,9 +63,10 @@
       position:relative;
       display:block;
       transform: scaleX(2);
-      margin-left:60px;
-      /* right:12px; */
+      margin-left:38px;
+      margin-right:50px;
       height:fit-content;
+      margin-top:-5px;
       z-index: -1;
       color:black;
       background:rgb(255,0,100);
@@ -88,7 +86,8 @@
       width:100%;
       /* min-height:6rem; */
       height:100%;
-      border:1px dashed black;
+      /* border:1px dashed black; */
+      border:none;
     }
    #secret_input:focus{
       outline:none;
@@ -154,7 +153,7 @@
       left:0;
       top:0;
     }
-    @media (max-width:1000px){
+    @media (max-width:800px){
       html{
         overflow:hidden;
       }
@@ -206,20 +205,20 @@
 
     <!-- toolbar holding save & load icons -->
     <div id = "toolbar">
+      <div id = "secret_header" class = "toolbar_item">~confess~</div>
       <img src = "data/xp_folder.png" class = "toolbar_item" title = "Enter an image file" style = "cursor:pointer;" onclick = "openFileSelector()">
-        <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImage(event)'/>
+        <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImageFromFile(event)'/>
       </img>
-      <img id = "file_type_icon" title = "Save contradiction to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
+      <img id = "file_type_icon" title = "Save to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
       <!-- <div id = "file_type_text" class = "stretched_text">jpg</div>
       <div id = "coordinate_text" class = "stretched_text"></div> -->
-      <img title = "Write confession to file" style = "cursor:pointer;" class = "toolbar_item"  onclick = 'commitTextAndStartNewEntry()' src = "data/xp_upload_icon.png">
+      <img title = "Write current confession & start a new one" style = "cursor:pointer;" class = "toolbar_item"  onclick = 'commitTextAndStartNewEntry()' src = "data/xp_upload_icon.png">
       <!-- header -->
-      <div id = "secret_header" class = "toolbar_item">~confess~</div>
     </div>
 
-    <!-- container holding the p5 image canvas -->
+    <!-- container holding the main image element -->
     <div id = "canvas_container">
-      <img id = "test">
+      <img id = "main_image">
     </div>
 
     
