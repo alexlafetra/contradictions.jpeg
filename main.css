@@ -1,0 +1,223 @@
+html{
+    overflow: hidden;
+    background-color: #ffffff;
+
+    --image-width:100px;
+    --image-height:100px;
+    --byte-index-percent:0.0;
+    --text-box-height:200px;
+    --title-height:100px;
+    width:100%;
+    user-select: none;;
+}
+
+body {
+    width: 100%;
+    margin:0;
+}
+
+#app_container{
+    font-family:monospace;
+    width:100vw;
+    height:100vh;
+    display:grid;
+    grid-template-columns: auto 40px 300px;
+    grid-template-rows: var(--title-height) auto var(--text-box-height);
+    grid-template-areas: 
+    "toolbar bytescrollbar textoutput"
+    "image bytescrollbar textoutput"
+    "textinput bytescrollbar textoutput";
+}
+#image_container{
+    image-rendering: pixelated;
+    grid-area:image;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    max-width:100%;
+    gap:20px;
+    padding:20px;
+}
+#image_container img{
+    max-width:100%;
+    max-height:calc( calc(100vh - var(--title-height) - var(--text-box-height) - 25px) / 2);
+    padding:10px;
+    user-select: none;
+}
+#processed_image{
+    border:2px dashed rgb(255,0,100);;
+    border-radius:10px;
+}
+#original_image{
+    cursor:pointer;
+}
+/* holds the title */
+#title{
+    font-family: "Monsieur La Doulaise", cursive;
+    font-size: 24pt;
+    transform-origin: top left;
+    transform: scaleX(2);
+    margin-left:1ch;
+    /* margin-right:50px; */
+    height:fit-content;
+    color:rgb(255,0,100);
+    /* grid-area:toolbar; */
+}
+/* holds the textArea element */
+#text_input_holder{
+    position:relative;
+    grid-area:textinput;
+    display:block;
+    padding:20px;
+}
+#text_input_tooltip_holder{
+    padding-bottom:10px;
+    display:flex;
+    width:500px;
+}
+#text_input_descriptoin{
+    align-self:left;
+    width:fit-content;
+}
+
+#scrollbar_tooltip{
+    position:absolute;
+    right:350px;
+    writing-mode: vertical-lr;
+    top:50%;
+}
+
+#text_input_area{
+    font-family: 'Times New Roman', Times, serif;
+    resize:none;
+    width:calc(100% - 40px);
+    height:calc(100% - 60px);
+    outline:1px dashed black;
+    outline-offset: 1px;
+    border:0px;
+    border-radius:10px;
+    /* padding:1ch; */
+    padding:20px;
+}
+#text_input_area:focus{
+    background-color: yellow;
+}
+
+#byte_scrollbar_container{
+    grid-area:bytescrollbar;
+    width:100%;
+    height:100%;
+    background-color: blue;
+    cursor:pointer;
+}
+#byte_scrollbar_pre{
+    height: calc(var(--byte-index-percent)*100%);
+    width:100%;
+    background-color: rgb(255,0,100);
+    pointer-events: none;
+}
+#byte_display{
+    writing-mode:vertical-lr;
+    position:fixed;
+    right:315px;
+    top: calc(min(var(--byte-index-percent) * 100vh + 1ch,calc(100vh - 16ch)));
+    color:white;
+    text-wrap: nowrap;
+    /* transform:scale(2,1); */
+    pointer-events: none;
+    user-select: none;
+}
+
+#binary_text_container{
+    grid-area:textoutput;
+    overflow-y:scroll;
+    overflow-x: hidden;
+    font-family:monospace;
+    font-size: 8pt;
+    background-color: rgb(255, 255, 255);
+    color: rgb(100,100,255);
+    scroll-behavior: auto; /* Explicitly sets instant scrolling, though it's the default */
+    user-select: none;
+}
+#toolbar{
+    grid-area:toolbar;
+    cursor:pointer;
+    display:flex;
+    flex-direction: column;
+
+}
+#tools{
+    pointer-events: none;
+    display:flex;
+    z-index:2;
+    align-items: center;
+}
+.toolbar_item{
+    background-color: blue;
+    color:white;
+    pointer-events: all;
+    padding:1ch;
+    margin-left:10px;
+    transition:0.2s;
+    border-radius:10px;
+}
+.toolbar_item:hover{
+    background-color:rgb(255,0,100);
+}
+
+#file_selector{
+    display:none;
+}
+.stretched_text{
+    transform-origin: top left;
+    transform:scale(1,4);
+    color:white;
+    font-family:monospace;
+    margin-right:10px;
+}
+#error_container{
+    position:absolute;
+    display:none;
+    margin:auto;
+    z-index:1;
+    pointer-events: none;
+}
+#error_icon{
+    width:100%;
+}
+#error_text_container{
+    color:red;
+}
+@media (max-width:800px){
+    html{
+        overflow:hidden;
+    }
+    #app_container{
+        grid-template-columns: auto 40px;
+        grid-template-rows: var(--title-height) auto var(--text-box-height);
+        grid-template-areas: 
+        "toolbar bytescrollbar"
+        "image bytescrollbar"
+        "textinput bytescrollbar";
+    }
+    #binary_text_container{
+        position:absolute;
+        top:var(--title-height);
+        bottom:var(--text-box-height);
+        width:calc(100vw - 40px);
+    }
+    #image_container{
+        z-index: 1;
+    }
+    #processed_image{
+        background-color: white;
+    }
+    #byte_display{
+        right:12px;
+    }
+    #scrollbar_tooltip{
+        right:45px;
+        z-index:1;
+    }
+}

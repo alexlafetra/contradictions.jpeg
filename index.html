@@ -4,248 +4,64 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" >
 
-  <!-- PLEASE NO CHANGES BELOW THIS LINE (UNTIL I SAY SO) -->
   <script language="javascript" type="text/javascript" src="jpg_contradictions.js"></script>
   <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
-  
+  <link rel="stylesheet" href="main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Monsieur+La+Doulaise&display=swap" rel="stylesheet">
-  
-  <style>
-    html{
-      overflow: hidden;
-      background-color: #ffffff;
-
-      --image-width:100px;
-      --image-height:100px;
-      --byte-index-percent:0.0;
-      width:100%;
-    }
-
-    body {
-      width: 100%;
-      margin:0;
-    }
-    #main_image{
-
-    }
-    #app_container{
-      width:100%;
-      height:100vh;
-      display:grid;
-      grid-template-columns: minmax(var(--image-width),auto) 500px;
-      grid-template-rows: 50px 200px 20px auto;
-      grid-template-areas: 
-        "image toolbar"
-        "image textinput"
-        "image bytescrollbar"
-        "image textoutput";
-    }
-    canvas{
-      cursor:pointer;
-      vertical-align: middle;
-      image-rendering: pixelated;
-    }
-    #canvas_container{
-      image-rendering: pixelated;
-      grid-area:image;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height:100%;
-      width:100%;
-    }
-    /* holds the title */
-    #secret_header{
-      font-family: "Monsieur La Doulaise", cursive;
-      font-size: 24pt;
-      position:relative;
-      display:block;
-      transform: scaleX(2);
-      margin-left:38px;
-      margin-right:50px;
-      height:fit-content;
-      margin-top:-5px;
-      z-index: -1;
-      color:black;
-      background:rgb(255,0,100);
-      /* grid-area:toolbar; */
-    }
-    /* holds the textArea element */
-    #secret_input_holder{
-      position:relative;
-      grid-area:textinput;
-      display:block;
-      width:100%;
-      min-height:6rem;
-    }
-    #secret_input{
-      font-family: 'Times New Roman', Times, serif;
-      resize:none;
-      width:100%;
-      /* min-height:6rem; */
-      height:100%;
-      /* border:1px dashed black; */
-      border:none;
-    }
-   #secret_input:focus{
-      outline:none;
-      background-color: yellow;
-    }
-
-    #byte_scrollbar_container{
-      grid-area:bytescrollbar;
-      width:100%;
-      height:100%;
-      background-color: blue;
-      cursor:pointer;
-    }
-    #byte_scrollbar_pre{
-      width: calc(var(--byte-index-percent)*100%);
-      height:100%;
-      background-color: rgb(255,0,100);
-      pointer-events: none;
-    }
-    
-    #binary_text_container{
-      grid-area:textoutput;
-      overflow-y:scroll;
-      overflow-x: hidden;
-      font-family:monospace;
-      font-size: 8pt;
-      background-color: blue;
-      color: rgb(100,100,255);
-      scroll-behavior: auto; /* Explicitly sets instant scrolling, though it's the default */
-      user-select: none;
-    }
-    #toolbar{
-      grid-area:toolbar;
-      cursor:pointer;
-      pointer-events: none;
-      display:flex;
-      margin:5px;
-      z-index:2;
-    }
-    .toolbar_item{
-      padding-right:5px;
-      pointer-events: all;
-      min-width:50px;
-    }
-    #file_selector{
-      display:none;
-    }
-    .stretched_text{
-      transform:scale(1,4) translateY(12px);
-      color:white;
-      font-family:monospace;
-      margin-right:10px;
-    }
-    #error_container{
-      position:absolute;
-      display:none;
-      margin:auto;
-      z-index:1;
-      pointer-events: none;
-    }
-    #confession_booth{
-      position:absolute;
-      left:0;
-      top:0;
-    }
-    @media (max-width:800px){
-      html{
-        overflow:hidden;
-      }
-      #app_container{
-        width:100%;
-        height:100vh;
-        display:grid;
-        grid-template-columns: 100%;
-        grid-template-rows: 50px auto auto 50px auto;
-        
-        grid-template-areas: 
-          "toolbar"
-          "textinput"
-          "image"
-          "bytescrollbar"
-          "textoutput";
-      }
-      #toolbar{
-        grid-area:toolbar;
-        cursor:pointer;
-        pointer-events: none;;
-      }
-      #binary_text_container{
-        grid-area:textoutput;
-        overflow-y:scroll;
-        overflow-x: hidden;
-        font-family:monospace;
-        font-size: 8pt;
-        background-color: blue;
-        color: rgb(100,100,255);
-      }
-      #error_container{
-        position:absolute;
-        display:none;
-        margin:auto;
-        z-index:1;
-        align-items:center;
-        justify-content: center;
-      }
-      #error_container img{
-        width:80%;
-      }
-    }
-  </style>
 </head>
 
 <body>
   <div id = "app_container">
+   
+    <div id = "scrollbar_tooltip">
+    <-- scroll -->
+    </div>
 
     <!-- toolbar holding save & load icons -->
     <div id = "toolbar">
-      <div id = "secret_header" class = "toolbar_item">~confess~</div>
-      <img src = "data/xp_folder.png" class = "toolbar_item" title = "Enter an image file" style = "cursor:pointer;" onclick = "openFileSelector()">
-        <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImageFromFile(event)'/>
-      </img>
-      <img id = "file_type_icon" title = "Save to desktop" class = "toolbar_item" style = "cursor:pointer;" onclick = 'saveImage()' src = "data/xp_image_icon.png">
-      <!-- <div id = "file_type_text" class = "stretched_text">jpg</div>
-      <div id = "coordinate_text" class = "stretched_text"></div> -->
-      <img title = "Write current confession & start a new one" style = "cursor:pointer;" class = "toolbar_item"  onclick = 'commitTextAndStartNewEntry()' src = "data/xp_upload_icon.png">
-      <!-- header -->
+      <div id = "title">Confession.Jpeg</div>
+        <div id = "tools">
+        <!-- <div id = "title" class = "toolbar_item">~confess~</div> -->
+        <div class = "toolbar_item" onclick = "openFileSelector()">
+          upload
+          <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImageFromFile(event)'/>
+        </div>
+        <div class = "toolbar_item" onclick = 'saveImage()'>save</div>
+        <div class = "toolbar_item" onclick = 'commitTextAndStartNewEntry()'>confess</div>
+      </div>
     </div>
 
     <!-- container holding the main image element -->
-    <div id = "canvas_container">
-      <img id = "main_image">
+    <div id = "image_container">
+      <div id = "error_text_container"></div>
+      <img id = "processed_image" onclick = "handleClickOnOutputImage(event)" onmousemove="handleDragOnOutputImage(event)">
+      <img src = "data/xp_upload_icon.png" style = "width:25px;">
+      <img id = "original_image" onclick = "openFileSelector()">
     </div>
-
-    
 
     <!-- <img id = "confession_booth" src = 'data/confessional.png'> -->
+
     <!-- input textArea element -->
-    <div id = "secret_input_holder">
-      <textarea id = "secret_input" oninput = 'submitText()'></textarea>
+    <div id = "text_input_holder">
+      <div id = "text_input_tooltip_holder">
+        <div id = "text_input_description">write confession:</div>
+      </div>
+      <textarea id = "text_input_area" oninput = 'parseTextAndRecompile()'></textarea>
     </div>
-    <div id = "byte_scrollbar_container" onmousemove = "slideByteIndex(event)"  onmouseup ="sliderUnclickHandler()" onmousedown="sliderClickHandler()">
+    <div id = "byte_scrollbar_container" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseup ="sliderUnclickHandler()" onmousedown="sliderClickHandler()">
       <div id = "byte_scrollbar_pre"></div>
+      <div id = "byte_display"></div>
     </div>
 
     <!-- output text container -->
-    <div id = "binary_text_container" onscroll="scrollByteIndex(event)">
-
+    <div id = "binary_text_container">
         <!-- error container  -->
       <div id = "error_container">
-        <div id = "error_text" style = 'font-size:50pt;color:red;font-family:"Times New Roman", Times, serif;'></div>
         <img id = "error_icon" src = "data/xp_error.png">
       </div>
-
-      <!-- three text divs, for faster text setting -->
-      <div id = "text_start"></div>
-      <div id = "secret_text" style = "color:white;background-color: rgb(255,0,100);"></div>
-      <div id = "text_end"></div>
-
+      <div id = "original_text"></div>
     </div>
   </div>
 </body>
