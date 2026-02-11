@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" >
 
+  <!-- <script language="javascript" type="text/javascript" src="heic-to.min.js"></script> -->
+  <script language="javascript" type="text/javascript" src="jpegHeader.js"></script>
   <script language="javascript" type="text/javascript" src="jpg_contradictions.js"></script>
   <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
   <link rel="stylesheet" href="main.css">
@@ -13,20 +15,20 @@
 </head>
 
 <body>
-  <div id = "app_container">
-   
-    <div id = "scrollbar_tooltip">
-    <-- scroll -->
-    </div>
+  <div id = "about_page">
 
+  </div>
+  <div id = "app_container">
     <!-- toolbar holding save & load icons -->
     <div id = "toolbar">
-      <div id = "title">Confession.Jpeg</div>
-        <div id = "tools">
-        <!-- <div id = "title" class = "toolbar_item">~confess~</div> -->
+      <div id = "title_container">
+        <div id = "title">Confession.Jpeg</div>
+        <img id = "confession_booth_image" src = './images/confessional.png' style = "height:50px;width:auto;">
+      </div>
+      <div id = "tools">
         <div class = "toolbar_item" onclick = "openFileSelector()">
           upload
-          <input type="file" id="file_selector" accept="image/png, image/jpeg" onchange = 'loadNewImageFromFile(event)'/>
+          <input type="file" id="file_selector" accept="image/*" onchange = 'loadFile(event)'/>
         </div>
         <div class = "toolbar_item" onclick = 'saveImage()'>save</div>
         <div class = "toolbar_item" onclick = 'commitTextAndStartNewEntry()'>confess</div>
@@ -36,25 +38,28 @@
 
     <!-- container holding the main image element -->
     <div id = "image_container">
-      <div id = "error_text_container"></div>
       <img id = "processed_image" onclick = "handleClickOnOutputImage(event)" onmousemove="handleDragOnOutputImage(event)">
-      <img src = "data/xp_upload_icon.png" style = "height:25px;">
+        <div id = "error_text_container"></div>
+      </img>
+      <img src = "./images/xp_upload_icon.png" style = "height:25px;z-index: 1;">
       <img id = "original_image" onclick = "openFileSelector()">
     </div>
 
-    <!-- <img id = "confession_booth" src = 'data/confessional.png'> -->
-
     <!-- input textArea element -->
     <div id = "text_input_holder">
-      <div id = "text_input_tooltip_holder">
-        <div id = "text_input_description">write confession:</div>
-      </div>
-      <textarea id = "text_input_area" oninput = 'parseTextAndRecompile()'></textarea>
+      <div id = "text_input_description">write confession:</div>
+      <textarea id = "text_input_area" oninput = 'recompileImage()'></textarea>
     </div>
+
+    <!-- scrollbar -->
     <div id = "byte_scrollbar_container" ondrag = "handleDrag(event)" ontouchmove = "handleDrag(event)" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseleave = "sliderUnclickHandler(event)" onmouseup="sliderUnclickHandler()" onmousedown="sliderClickHandler(event)">
       <div id = "byte_scrollbar_pre"></div>
     </div>
-    <div id = "byte_display"></div>
+    <div id = "jpeg_header_tag" class = "jpeg_scrollbar_tag">header</div>
+    <div id = "jpeg_header_highlight" class = "file_section_highlight"></div>
+    <div id = "jpeg_body_tag" class = "jpeg_scrollbar_tag">body</div>
+    <div id = "jpeg_body_highlight" class = "file_section_highlight"></div>
+    <div id = "byte_display"><-- scroll --> byte 0</div>
     <div id = "byte_index_buttons">
       <div class = "byte_button" id = "up_button" onclick = "moveByteIndexUp()">-</div>
       <div class = "byte_button" id = "down_button" onclick = "moveByteIndexDown()">+</div>
@@ -62,10 +67,6 @@
 
     <!-- output text container -->
     <div id = "binary_text_container">
-        <!-- error container  -->
-      <div id = "error_container">
-        <img id = "error_icon" src = "data/xp_error.png">
-      </div>
       <div id = "original_text"></div>
     </div>
   </div>
