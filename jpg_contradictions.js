@@ -13,7 +13,8 @@ const imageSizeLimit = 350000; //300kB file size limit
 const JPEGConversionQuality = 1.0;
 const maxDim = 800;
 // const imageSizeLimit = 350000000; //300kB file size limit
-let headerSize = 0;
+let jpegData;
+
 let textEntryCursor = {
   index : 0,
   x:0,
@@ -230,6 +231,7 @@ function setNewIndex(index){
   textEntryCursor.x = textEntryCursor.index%img.width;
   textEntryCursor.y = Math.trunc(textEntryCursor.index/img.width);
   document.body.style.setProperty("--byte-index-percent",textEntryCursor.index/binaryDataString.length);
+  document.body.style.setProperty("--byte-scrollbar-color",textEntryCursor.index<jpegData.headerSize?'rgb(0, 255, 174)':'rgb(255,0,100)');
 
   document.getElementById('byte_display').innerText = `<-- scroll --> byte ${textEntryCursor.index}`;
 
@@ -271,8 +273,8 @@ function recompileImage(){
 function bufferToBinaryString(buffer){
   let binaryString = '';
   const bytes = new Uint8Array(buffer);
-  const header = parseJpegHeader(bytes);
-  document.documentElement.style.setProperty( "--jpeg-header-percent",header.headerSize/bytes.length);
+  jpegData = parseJpegHeader(bytes);
+  document.documentElement.style.setProperty( "--jpeg-header-percent",jpegData.headerSize/bytes.length);
   const len = bytes.byteLength;
   for(let i = 0; i<len; i++){
     binaryString += String.fromCharCode(bytes[i]);

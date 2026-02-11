@@ -4,10 +4,12 @@ html{
 
     --jpeg-header-percent:0.1;
     --byte-index-percent:0.0;
+    --byte-scrollbar-color:rgb(255,0,100);
     --text-box-height:100px;
     --title-height:80px;
     --scrollbar-width:60px;
     --byte-display-width:300px;
+
     width:100%;
     user-select: none;;
 }
@@ -128,7 +130,7 @@ body {
 #byte_scrollbar_pre{
     height: calc(var(--byte-index-percent)*100%);
     width:100%;
-    background-color: rgb(255,0,100);
+    background-color: var(--byte-scrollbar-color);
     pointer-events: none;
 }
 .file_section_highlight{
