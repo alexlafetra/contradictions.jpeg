@@ -14,7 +14,10 @@ let textEntryCursor = {
   y:0
 };
 let binaryDataString = "";
-let mouseIsPressed = false;
+
+function toggleAbout(){
+  
+}
 
 //from: https://viereck.ch/jpeg-header/jpeg-header.js
 // Author: Thomas Lochmatter, thomas.lochmatter@viereck.ch
@@ -201,12 +204,18 @@ function parseTextAndRecompile(){
 }
 
 
-function sliderClickHandler(){
-  mouseIsPressed = true;
+function sliderClickHandler(event){
+  //total width of the scrollbar
+  const targetHeight = event.srcElement.clientHeight;
+  //location of click within scrollbar
+  const clickPos = event.offsetY;
+  const newIndex = Math.trunc((binaryDataString.length)*clickPos/targetHeight);
+  setNewIndex(newIndex);  setNewIndex(newIndex);
 }
+
 function sliderUnclickHandler(){
-  mouseIsPressed = false;
 }
+
 function handleClickOnOutputImage(event){
   event.preventDefault();
   event.stopPropagation();
@@ -229,17 +238,23 @@ function handleScroll(event){
   const newIndex  = Math.min(Math.max(textEntryCursor.index + (event.deltaY),0),binaryDataString.length);
   setNewIndex(newIndex);
 }
+
 function handleDrag(event){
-  if(mouseIsPressed){
+  if(event.buttons || (event.touches && event.touches.length)){
     //total width of the scrollbar
     const targetHeight = event.srcElement.clientHeight;
     //location of click within scrollbar
-    const clickPos = event.offsetY;
+    const clickPos = event.touches?event.touches[0].clientY:event.offsetY;
     const newIndex = Math.trunc((binaryDataString.length)*clickPos/targetHeight);
     setNewIndex(newIndex);
   }
 }
-
+function moveByteIndexUp(){
+  setNewIndex(textEntryCursor.index-1);
+}
+function moveByteIndexDown(){
+  setNewIndex(textEntryCursor.index+1);
+}
 function setNewIndex(index){
   const img = document.getElementById('processed_image');
   textEntryCursor.index = Math.max(Math.min(Math.trunc(index),binaryDataString.length),0);

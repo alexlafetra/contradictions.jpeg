@@ -30,6 +30,7 @@
         </div>
         <div class = "toolbar_item" onclick = 'saveImage()'>save</div>
         <div class = "toolbar_item" onclick = 'commitTextAndStartNewEntry()'>confess</div>
+        <div class = "toolbar_item" onclick = 'toggleAbout()' style = "background-color:transparent;color:blue;text-decoration: underline;">about</div>
       </div>
     </div>
 
@@ -37,7 +38,7 @@
     <div id = "image_container">
       <div id = "error_text_container"></div>
       <img id = "processed_image" onclick = "handleClickOnOutputImage(event)" onmousemove="handleDragOnOutputImage(event)">
-      <img src = "data/xp_upload_icon.png" style = "width:25px;">
+      <img src = "data/xp_upload_icon.png" style = "height:25px;">
       <img id = "original_image" onclick = "openFileSelector()">
     </div>
 
@@ -50,9 +51,13 @@
       </div>
       <textarea id = "text_input_area" oninput = 'parseTextAndRecompile()'></textarea>
     </div>
-    <div id = "byte_scrollbar_container" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseup ="sliderUnclickHandler()" onmousedown="sliderClickHandler()">
+    <div id = "byte_scrollbar_container" ondrag = "handleDrag(event)" ontouchmove = "handleDrag(event)" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseleave = "sliderUnclickHandler(event)" onmouseup="sliderUnclickHandler()" onmousedown="sliderClickHandler(event)">
       <div id = "byte_scrollbar_pre"></div>
-      <div id = "byte_display"></div>
+    </div>
+    <div id = "byte_display"></div>
+    <div id = "byte_index_buttons">
+      <div class = "byte_button" id = "up_button" onclick = "moveByteIndexUp()">-</div>
+      <div class = "byte_button" id = "down_button" onclick = "moveByteIndexDown()">+</div>
     </div>
 
     <!-- output text container -->

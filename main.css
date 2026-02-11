@@ -2,11 +2,11 @@ html{
     overflow: hidden;
     background-color: #ffffff;
 
-    --image-width:100px;
-    --image-height:100px;
     --byte-index-percent:0.0;
     --text-box-height:200px;
     --title-height:100px;
+    --scrollbar-width:60px;
+    --byte-display-width:300px;
     width:100%;
     user-select: none;;
 }
@@ -17,11 +17,14 @@ body {
 }
 
 #app_container{
+    position:absolute;
     font-family:monospace;
-    width:100vw;
-    height:100vh;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
     display:grid;
-    grid-template-columns: auto 40px 300px;
+    grid-template-columns: auto var(--scrollbar-width) var(--byte-display-width);
     grid-template-rows: var(--title-height) auto var(--text-box-height);
     grid-template-areas: 
     "toolbar bytescrollbar textoutput"
@@ -35,13 +38,13 @@ body {
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    /* width:fit-content; */
     max-width:100%;
-    gap:20px;
-    padding:20px;
 }
 #image_container img{
     max-width:100%;
-    max-height:calc( calc(100vh - var(--title-height) - var(--text-box-height) - 25px) / 2);
+    height:fit-content;
+    max-height:calc( calc(100vh - var(--title-height) - var(--text-box-height) - 150px) / 2);
     padding:10px;
     user-select: none;
 }
@@ -57,8 +60,9 @@ body {
     font-family: "Monsieur La Doulaise", cursive;
     font-size: 24pt;
     transform-origin: top left;
-    transform: scaleX(2);
+    transform: scaleX(1.8);
     margin-left:1ch;
+    width:fit-content;
     /* margin-right:50px; */
     height:fit-content;
     color:rgb(255,0,100);
@@ -69,12 +73,12 @@ body {
     position:relative;
     grid-area:textinput;
     display:block;
-    padding:20px;
+    padding:0px 15px 30px 15px;
 }
 #text_input_tooltip_holder{
-    padding-bottom:10px;
+    padding:7.5px;
     display:flex;
-    width:500px;
+    width:fit-content;
 }
 #text_input_descriptoin{
     align-self:left;
@@ -83,7 +87,7 @@ body {
 
 #scrollbar_tooltip{
     position:absolute;
-    right:350px;
+    right:calc( var(--byte-display-width) + var(--scrollbar-width) + 10px);
     writing-mode: vertical-lr;
     top:50%;
 }
@@ -120,7 +124,7 @@ body {
 #byte_display{
     writing-mode:vertical-lr;
     position:fixed;
-    right:315px;
+    right:calc( var(--byte-display-width) + var(--scrollbar-width)/2 - 0.5ch);
     top: calc(min(var(--byte-index-percent) * 100vh + 1ch,calc(100vh - 16ch)));
     color:white;
     text-wrap: nowrap;
@@ -128,21 +132,46 @@ body {
     pointer-events: none;
     user-select: none;
 }
+#byte_index_buttons{
+    position:absolute;
+    right:calc( var(--byte-display-width) + var(--scrollbar-width) + 1ch);
+    top: calc(max(calc(min(var(--byte-index-percent) * 100vh - 55px,calc(100vh - 16ch))),10px));
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+}
+.byte_button{
+    background:blue;
+    cursor:pointer;
+    display:flex;
+    color:white;
+    width:30px;
+    height:50px;
+    justify-content: center;
+    align-items: center;
+    border-radius:10px;
+    z-index: 2;
+}
+.byte_button:hover{
+    background-color:rgb(255,0,100);
+}
 
 #binary_text_container{
     grid-area:textoutput;
     overflow-y:scroll;
-    overflow-x: hidden;
+    /* overflow-x: hidden; */
+    overflow-x:scroll;
     font-family:monospace;
     font-size: 8pt;
     background-color: rgb(255, 255, 255);
     color: rgb(100,100,255);
     scroll-behavior: auto; /* Explicitly sets instant scrolling, though it's the default */
     user-select: none;
+    z-index: 0;
 }
 #toolbar{
     grid-area:toolbar;
-    cursor:pointer;
+    /* cursor:pointer; */
     display:flex;
     flex-direction: column;
 
@@ -152,6 +181,7 @@ body {
     display:flex;
     z-index:2;
     align-items: center;
+    width:fit-content;
 }
 .toolbar_item{
     background-color: blue;
@@ -161,6 +191,7 @@ body {
     margin-left:10px;
     transition:0.2s;
     border-radius:10px;
+    cursor:pointer;
 }
 .toolbar_item:hover{
     background-color:rgb(255,0,100);
@@ -192,9 +223,10 @@ body {
 @media (max-width:800px){
     html{
         overflow:hidden;
+        --byte-display-width:0px;
     }
     #app_container{
-        grid-template-columns: auto 40px;
+        grid-template-columns: auto var(--scrollbar-width);
         grid-template-rows: var(--title-height) auto var(--text-box-height);
         grid-template-areas: 
         "toolbar bytescrollbar"
@@ -205,7 +237,8 @@ body {
         position:absolute;
         top:var(--title-height);
         bottom:var(--text-box-height);
-        width:calc(100vw - 40px);
+        right:var(--scrollbar-width);
+        left:0px;
     }
     #image_container{
         z-index: 1;
@@ -213,11 +246,22 @@ body {
     #processed_image{
         background-color: white;
     }
-    #byte_display{
-        right:12px;
-    }
     #scrollbar_tooltip{
-        right:45px;
+        /* right:45px; */
         z-index:1;
     }
+    #byte_index_buttons{
+    position:absolute;
+    right:calc( var(--byte-display-width) + var(--scrollbar-width) + 4ch);
+    top: calc(max(calc(min(var(--byte-index-percent) * 100vh - 55px,calc(100vh - 16ch))),10px));
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+}
+.byte_button{
+    width:60px;
+    height:100px;
+    border-radius:30px;
+
+}
 }
