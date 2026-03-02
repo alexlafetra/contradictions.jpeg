@@ -10,15 +10,15 @@ import("./heic-to.min.js").then(m => {
 
 const defaultImageAddress = "./images/clouds.jpeg";
 const imageSizeLimit = 350000; //300kB file size limit
-const JPEGConversionQuality = 1.0;
+const JPEGConversionQuality = 0.2;
 const maxDim = 800;
+const headerZone = 0.1;
 // const imageSizeLimit = 350000000; //300kB file size limit
 let jpegData;
 
 let textEntryCursor = {
   index : 0,
-  x:0,
-  y:0
+  scrollbarPosition: 0
 };
 let binaryDataString = "";
 
@@ -182,31 +182,53 @@ function sliderClickHandler(event){
   const targetHeight = event.srcElement.clientHeight;
   //location of click within scrollbar
   const clickPos = event.offsetY;
-  const newIndex = Math.trunc((binaryDataString.length)*clickPos/targetHeight);
-  setNewIndex(newIndex);  setNewIndex(newIndex);
+  getBytePositionFromPercent(clickPos/targetHeight);
 }
+
 function sliderUnclickHandler(){
 }
 
-function handleClickOnOutputImage(event){
-  event.preventDefault();
-  event.stopPropagation();
-  const coords = {x:event.offsetX,y:event.offsetY};
-  const img = document.getElementById('processed_image');
-  const index = coords.x + coords.y * img.width;
-  setNewIndex(index);
-}
-function handleDragOnOutputImage(event){
-  event.preventDefault();
-  event.stopPropagation();
-  if(event.buttons){
-    handleClickOnOutputImage(event);
+function getBytePositionFromPercent(ratio){
+  let newIndex;
+  //if ur in a predefined 'header zone', then scale the position relative to the header
+  if(ratio < headerZone){
+    newIndex = ratio * 1/headerZone * jpegData.headerSize;
   }
+  else{
+    //when ratio == 1, this needs to be binaryDataString.length
+    //when ratio == headerZone, this needs to be jpegData.headerSize
+    //so with a simple map_range, it'd be:
+    // Math.map(ratio,headerZone,1.0,jpegData.headerSize,binaryDataString.length);
+    
+    //// Source - https://stackoverflow.com/a/5732390
+    // Posted by Alok Singhal
+    // Retrieved 2026-02-12, License - CC BY-SA 3.0
+    // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
+    newIndex = jpegData.headerSize + ((binaryDataString.length - jpegData.headerSize) / (1.0 - headerZone)) * (ratio - headerZone);
+
+  } 
+  setNewIndex(newIndex);
 }
+
 function handleScroll(event){
   //increment index
   const newIndex  = Math.min(Math.max(textEntryCursor.index + (event.deltaY),0),binaryDataString.length);
   setNewIndex(newIndex);
+}
+
+function setNewIndex(index){
+  textEntryCursor.index = Math.max(Math.min(Math.trunc(index),binaryDataString.length),0);
+  const ratio = textEntryCursor.index<jpegData.headerSize?
+    (textEntryCursor.index/jpegData.headerSize * headerZone):
+    (headerZone + ((1.0 - headerZone) / (binaryDataString.length - jpegData.headerSize) * (index - jpegData.headerSize)));
+  document.body.style.setProperty("--scrollbar-percent",ratio);
+  document.body.style.setProperty("--byte-scrollbar-color",textEntryCursor.index<jpegData.headerSize?'rgb(0, 255, 174)':'rgb(255,0,100)');
+
+  document.getElementById('byte_display').innerText = `byte ${textEntryCursor.index}`;
+
+  recompileImage();
+  const textContainer = document.getElementById('binary_text_container');
+  textContainer.scrollTop = Math.max(textContainer.scrollHeight * textEntryCursor.index/binaryDataString.length -textContainer.clientHeight/2,0);
 }
 
 function handleDrag(event){
@@ -215,8 +237,7 @@ function handleDrag(event){
     const targetHeight = event.srcElement.clientHeight;
     //location of click within scrollbar
     const clickPos = event.touches?event.touches[0].clientY:event.offsetY;
-    const newIndex = Math.trunc((binaryDataString.length)*clickPos/targetHeight);
-    setNewIndex(newIndex);
+    getBytePositionFromPercent(clickPos/targetHeight);
   }
 }
 function moveByteIndexUp(){
@@ -224,20 +245,6 @@ function moveByteIndexUp(){
 }
 function moveByteIndexDown(){
   setNewIndex(textEntryCursor.index+1);
-}
-function setNewIndex(index){
-  const img = document.getElementById('processed_image');
-  textEntryCursor.index = Math.max(Math.min(Math.trunc(index),binaryDataString.length),0);
-  textEntryCursor.x = textEntryCursor.index%img.width;
-  textEntryCursor.y = Math.trunc(textEntryCursor.index/img.width);
-  document.body.style.setProperty("--byte-index-percent",textEntryCursor.index/binaryDataString.length);
-  document.body.style.setProperty("--byte-scrollbar-color",textEntryCursor.index<jpegData.headerSize?'rgb(0, 255, 174)':'rgb(255,0,100)');
-
-  document.getElementById('byte_display').innerText = `<-- scroll --> byte ${textEntryCursor.index}`;
-
-  recompileImage();
-  const textContainer = document.getElementById('binary_text_container');
-  textContainer.scrollTop = Math.max(textContainer.scrollHeight * textEntryCursor.index/binaryDataString.length -textContainer.clientHeight/2,0);
 }
 
 function stringToURL(dataString){
@@ -273,8 +280,7 @@ function recompileImage(){
 function bufferToBinaryString(buffer){
   let binaryString = '';
   const bytes = new Uint8Array(buffer);
-  jpegData = parseJpegHeader(bytes);
-  document.documentElement.style.setProperty( "--jpeg-header-percent",jpegData.headerSize/bytes.length);
+  jpegData = {...parseJpegHeader(bytes)};
   const len = bytes.byteLength;
   for(let i = 0; i<len; i++){
     binaryString += String.fromCharCode(bytes[i]);

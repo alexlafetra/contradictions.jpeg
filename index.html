@@ -15,8 +15,8 @@
 </head>
 
 <body>
-  <div id = "about_page">
-
+  <div id = "about_page" style = "visibility: hidden;">
+    first, 
   </div>
   <div id = "app_container">
     <!-- toolbar holding save & load icons -->
@@ -27,27 +27,27 @@
       </div>
       <div id = "tools">
         <div class = "toolbar_item" onclick = "openFileSelector()">
-          upload
+          new
           <input type="file" id="file_selector" accept="image/*" onchange = 'loadFile(event)'/>
         </div>
         <div class = "toolbar_item" onclick = 'saveImage()'>save</div>
-        <div class = "toolbar_item" onclick = 'commitTextAndStartNewEntry()'>confess</div>
-        <div class = "toolbar_item" onclick = 'toggleAbout()' style = "background-color:transparent;color:blue;text-decoration: underline;">about</div>
+        <div class = "toolbar_item" onclick = 'toggleAbout()' style = "background-color:transparent;color:blue;text-decoration: underline;">how to confess</div>
+        <div class = "toolbar_item" id = "byte_display">byte 0</div>
       </div>
     </div>
 
     <!-- container holding the main image element -->
     <div id = "image_container">
-      <img id = "processed_image" onclick = "handleClickOnOutputImage(event)" onmousemove="handleDragOnOutputImage(event)">
+      <img id = "processed_image" title = "confessed jpeg">
         <div id = "error_text_container"></div>
       </img>
       <img src = "./images/xp_upload_icon.png" style = "height:25px;z-index: 1;">
-      <img id = "original_image" onclick = "openFileSelector()">
+      <img id = "original_image" title = "click to upload a new image" onclick = "openFileSelector()">
     </div>
 
     <!-- input textArea element -->
     <div id = "text_input_holder">
-      <div id = "text_input_description">write confession:</div>
+      <div id = "text_input_description">confession:</div>
       <textarea id = "text_input_area" oninput = 'recompileImage()'></textarea>
     </div>
 
@@ -55,11 +55,13 @@
     <div id = "byte_scrollbar_container" ondrag = "handleDrag(event)" ontouchmove = "handleDrag(event)" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseleave = "sliderUnclickHandler(event)" onmouseup="sliderUnclickHandler()" onmousedown="sliderClickHandler(event)">
       <div id = "byte_scrollbar_pre"></div>
     </div>
-    <div id = "jpeg_header_tag" class = "jpeg_scrollbar_tag">header</div>
-    <div id = "jpeg_header_highlight" class = "file_section_highlight"></div>
-    <div id = "jpeg_body_tag" class = "jpeg_scrollbar_tag">body</div>
-    <div id = "jpeg_body_highlight" class = "file_section_highlight"></div>
-    <div id = "byte_display"><-- scroll --> byte 0</div>
+    <!-- <div id = "jpeg_header_tag" class = "jpeg_scrollbar_tag">header</div> -->
+    <!-- <div id = "jpeg_header_highlight" class = "file_section_highlight"></div> -->
+    <!-- <div id = "jpeg_body_tag" class = "jpeg_scrollbar_tag">body</div> -->
+    <!-- <div id = "jpeg_body_highlight" class = "file_section_highlight"></div> -->
+    <div id = "scrollbar_label">
+      <-- scroll -->
+    </div>
     <div id = "byte_index_buttons">
       <div class = "byte_button" id = "up_button" onclick = "moveByteIndexUp()">-</div>
       <div class = "byte_button" id = "down_button" onclick = "moveByteIndexDown()">+</div>

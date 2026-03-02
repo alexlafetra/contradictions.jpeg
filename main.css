@@ -2,12 +2,12 @@ html{
     overflow: hidden;
     background-color: #ffffff;
 
-    --jpeg-header-percent:0.1;
-    --byte-index-percent:0.0;
+    --jpeg-header-percent:0.25;
+    --scrollbar-percent:0.0;
     --byte-scrollbar-color:rgb(255,0,100);
     --text-box-height:100px;
     --title-height:80px;
-    --scrollbar-width:60px;
+    --scrollbar-width:100px;
     --byte-display-width:300px;
 
     width:100%;
@@ -29,6 +29,9 @@ body {
     bottom:var(--text-box-height);
     background-color: white;
     z-index: 2;
+    padding:20px;
+    font-family: monospace;
+    color:blue;
 }
 
 #app_container{
@@ -59,20 +62,31 @@ body {
 #image_container img{
     width:100%;
     height: 100%;
-    max-height:calc( calc(100vh - var(--title-height) - var(--text-box-height) - 150px) / 2);
     padding:10px;
     user-select: none;
     object-fit: contain;
 }
+@keyframes pulse_shadow {
+    0% {filter: drop-shadow(5px 5px 4px rgb(255, 0, 100));}
+    50% {    filter: drop-shadow(5px 5px 4px rgb(255, 255, 255));}
+    100% {filter: drop-shadow(5px 5px 4px rgb(255, 0, 100));}
+}
 #processed_image{
-    /* border:2px dashed rgb(255,0,100);;
-    border-radius:10px; */
     filter: drop-shadow(5px 5px 4px rgb(255, 0, 100));
+    animation: pulse_shadow 3s infinite;
+    animation-timing-function: ease;
+    max-height:calc( calc(100svh - var(--title-height) - var(--text-box-height) - 350px));
 }
 #original_image{
     cursor:pointer;
-    filter: drop-shadow(5px 5px 4px rgb(180,180,255));
+    max-width:50%;
+    max-height:200px;
+    transition:0.5s;
 }
+#original_image:hover{
+    filter: drop-shadow(5px 5px 10px rgb(141, 146, 255));
+}
+
 
 #title_container{
     display: flex;
@@ -102,6 +116,7 @@ body {
     width:fit-content; */
     padding:7.5px;
     float:left;
+    color:#969696;
 }
 
 #text_input_area{
@@ -126,12 +141,15 @@ body {
     height:100%;
     background-color: blue;
     cursor:pointer;
+    /* border-radius: calc(var(--scrollbar-width)/2); */
+    overflow: hidden;
 }
 #byte_scrollbar_pre{
-    height: calc(var(--byte-index-percent)*100%);
+    height: calc(var(--scrollbar-percent)*100%);
     width:100%;
     background-color: var(--byte-scrollbar-color);
     pointer-events: none;
+    /* border-radius: calc(var(--scrollbar-width)/2); */
 }
 .file_section_highlight{
     background-color: transparent;
@@ -143,13 +161,13 @@ body {
     z-index:2;
 }
 #jpeg_header_highlight{
-    height:calc(100vh * var(--jpeg-header-percent));
+    height:calc(100svh * var(--jpeg-header-percent));
     top:2px;
     border: 2px solid rgb(34, 126, 255);
     border-right:2px solid transparent;
 }
 #jpeg_body_highlight{
-    height:calc(100vh * calc(1.0 - var(--jpeg-header-percent)) - 20px);
+    height:calc(100svh * calc(1.0 - var(--jpeg-header-percent)) - 20px);
     bottom:2px;
     border: 2px dashed rgb(0, 189, 0);
     border-right:2px solid transparent;
@@ -162,27 +180,31 @@ body {
 }
 #jpeg_header_tag{
     color:rgb(34, 126, 255);
-    top:calc(50vh * var(--jpeg-header-percent));
+    top:calc(50svh * var(--jpeg-header-percent));
 }
 #jpeg_body_tag{
     color:rgb(0, 189, 0);
     bottom:calc( var(--text-box-height) - 2em );
 }
-#byte_display{
+#scrollbar_label{
     writing-mode:vertical-lr;
     position:fixed;
     right:calc( var(--byte-display-width) + var(--scrollbar-width)/2 - 0.5ch);
-    top: calc(max(1ch,min(var(--byte-index-percent) * 100vh - 14.5ch,calc(100vh - 28ch))));
+    top: calc(max(1ch,min(var(--scrollbar-percent) * 100svh - 7ch,calc(100svh - 10ch))));
     color:white;
     text-wrap: nowrap;
     /* transform:scale(2,1); */
     pointer-events: none;
     user-select: none;
 }
+#byte_display{
+    background-color: transparent;
+    color:rgb(255,0,100);
+}
 #byte_index_buttons{
     position:absolute;
     right:calc( var(--byte-display-width) + var(--scrollbar-width) + 1ch);
-    top: calc(max(calc(min(var(--byte-index-percent) * 100vh - 55px,calc(100vh - 16ch))),10px));
+    top: calc(max(calc(min(var(--scrollbar-percent) * 100svh - 55px,calc(100svh - 16ch))),10px));
     display:flex;
     flex-direction: column;
     gap:10px;
@@ -268,7 +290,7 @@ body {
     font-family:monospace;
     float:right;
 }
-@media (max-width:800px){
+@media (max-width:1000px){
     html{
         overflow:hidden;
         --byte-display-width:0px;
@@ -287,6 +309,7 @@ body {
         bottom:var(--text-box-height);
         right:var(--scrollbar-width);
         left:0px;
+        color: rgb(175, 175, 255);
     }
     #image_container{
         z-index: 1;
@@ -294,7 +317,7 @@ body {
     #byte_index_buttons{
         position:absolute;
         right:calc( var(--byte-display-width) + var(--scrollbar-width) + 4ch);
-        top: calc(max(calc(min(var(--byte-index-percent) * 100vh - 55px,calc(100vh - 16ch))),10px));
+        top: calc(max(calc(min(var(--scrollbar-percent) * 100svh - 55px,calc(100svh - 16ch))),10px));
         display:flex;
         flex-direction: column;
         gap:10px;
