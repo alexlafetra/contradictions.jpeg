@@ -4,10 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" >
 
-  <!-- <script language="javascript" type="text/javascript" src="heic-to.min.js"></script> -->
   <script language="javascript" type="text/javascript" src="jpegHeader.js"></script>
   <script language="javascript" type="text/javascript" src="jpg_contradictions.js"></script>
-  <!-- OK, YOU CAN MAKE CHANGES BELOW THIS LINE AGAIN -->
   <link rel="stylesheet" href="main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,62 +13,57 @@
 </head>
 
 <body>
-  <div id = "about_page" style = "visibility: hidden;">
-    first, 
-  </div>
   <div id = "app_container">
     <!-- toolbar holding save & load icons -->
     <div id = "toolbar">
       <div id = "title_container">
         <div id = "title">Confession.Jpeg</div>
-        <img id = "confession_booth_image" src = './images/confessional.png' style = "height:50px;width:auto;">
+        <!-- <img id = "confession_booth_image" src = './images/confessional.png' style = "height:50px;width:auto;"> -->
       </div>
       <div id = "tools">
         <div class = "toolbar_item" onclick = "openFileSelector()">
           new
-          <input type="file" id="file_selector" accept="image/*" onchange = 'loadFile(event)'/>
+          <input type="file" id="file_selector" accept="image/*" onchange = 'handleFileInput(event)'/>
         </div>
-        <div class = "toolbar_item" onclick = 'saveImage()'>save</div>
+        <div class = "toolbar_item" onclick = 'saveImageFile()'>save.jpeg</div>
+        <div class = "toolbar_item" onclick = 'saveTextFile()'>save.txt</div>
         <div class = "toolbar_item" onclick = 'toggleAbout()' style = "background-color:transparent;color:blue;text-decoration: underline;">how to confess</div>
-        <div class = "toolbar_item" id = "byte_display">byte 0</div>
       </div>
     </div>
 
+    <div id = "compression_slider_container">
+      <input class = "slider_element" type="range" id="compression_amount_slider" onchange = 'setCompressionQuality(1.0 - parseFloat(event.target.value));updateSliderVisual(parseFloat(event.target.value));' min = "0.0" max = "1.0" step = "0.01" value = "0.5">
+      <div id = "slider_display"></div>
+      <span class = "slider_label">compression amount</span>
+    </div>
+
+    <div id = "byte_display">byte 0</div>
+
     <!-- container holding the main image element -->
     <div id = "image_container">
-      <img id = "processed_image" title = "confessed jpeg">
+      <img id = "original_image" title = "click to upload a new image" onclick = "openFileSelector()">
+      <img id = "processed_image" title = "confession jpeg">
         <div id = "error_text_container"></div>
       </img>
-      <img src = "./images/xp_upload_icon.png" style = "height:25px;z-index: 1;">
-      <img id = "original_image" title = "click to upload a new image" onclick = "openFileSelector()">
     </div>
 
     <!-- input textArea element -->
     <div id = "text_input_holder">
       <div id = "text_input_description">confession:</div>
-      <textarea id = "text_input_area" oninput = 'recompileImage()'></textarea>
+      <textarea id = "text_input_area" oninput = 'recompileImage();insertText(confession.entryIndex);'></textarea>
     </div>
 
     <!-- scrollbar -->
-    <div id = "byte_scrollbar_container" ondrag = "handleDrag(event)" ontouchmove = "handleDrag(event)" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseleave = "sliderUnclickHandler(event)" onmouseup="sliderUnclickHandler()" onmousedown="sliderClickHandler(event)">
+    <!-- <div id = "byte_scrollbar_container" ondrag = "handleDrag(event)" ontouchmove = "handleDrag(event)" onmousemove = "handleDrag(event)"  onwheel = "handleScroll(event)" onmouseleave = "sliderUnclickHandler(event)" onmouseup="sliderUnclickHandler()" onmousedown="sliderClickHandler(event)">
       <div id = "byte_scrollbar_pre"></div>
-    </div>
+    </div> -->
     <!-- <div id = "jpeg_header_tag" class = "jpeg_scrollbar_tag">header</div> -->
     <!-- <div id = "jpeg_header_highlight" class = "file_section_highlight"></div> -->
     <!-- <div id = "jpeg_body_tag" class = "jpeg_scrollbar_tag">body</div> -->
     <!-- <div id = "jpeg_body_highlight" class = "file_section_highlight"></div> -->
-    <div id = "scrollbar_label">
-      <-- scroll -->
-    </div>
-    <div id = "byte_index_buttons">
-      <div class = "byte_button" id = "up_button" onclick = "moveByteIndexUp()">-</div>
-      <div class = "byte_button" id = "down_button" onclick = "moveByteIndexDown()">+</div>
-    </div>
 
     <!-- output text container -->
-    <div id = "binary_text_container">
-      <div id = "original_text"></div>
-    </div>
+    <div id = "binary_data_container" ondrag =  "handleDrag(event)" onpointermove = "handleDrag(event)"  onwheel = "handleScroll(event)"></div>></div>
   </div>
 </body>
 </html>

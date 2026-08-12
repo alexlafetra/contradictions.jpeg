@@ -8,40 +8,50 @@ import("./heic-to.min.js").then(m => {
   isHeic = m.isHeic;
 });
 
+const Confession = () =>{
+  return ({
+    maxChunkSize : 100,
+    binaryData:"",
+    entryIndex : 0,
+    scrollbarPosition : 0,
+    currentlyConfessedDiv : null,
+    JPEGCompressionQuality : 0.5,
+    originalFile : null,
+    jpegData: null,
+  });
+}
+
+const confession = Confession();
+
 const defaultImageAddress = "./images/clouds.jpeg";
 const imageSizeLimit = 350000; //300kB file size limit
-const JPEGConversionQuality = 0.2;
 const maxDim = 800;
 const headerZone = 0.1;
 // const imageSizeLimit = 350000000; //300kB file size limit
-let jpegData;
 
-let textEntryCursor = {
-  index : 0,
-  scrollbarPosition: 0
-};
-let binaryDataString = "";
-
-function toggleAbout(){
-  const aboutPage = document.getElementById('about_page');
-  if(aboutPage.style.visibility == 'hidden'){
-    aboutPage.style.visibility = 'visible';
+function buildTextPreviewDivs(){
+  const children = [];
+  for(let i = 0; i<confession.binaryData.length; i+=confession.maxChunkSize){
+    let text = "";
+    //if this is the last chunk, grab till the end of the text
+    if((i + confession.maxChunkSize) >= confession.binaryData.length){
+      text = confession.binaryData.slice(i);
+    }
+    else{
+      text = confession.binaryData.slice(i,i+confession.maxChunkSize);
+    }
+    let newElement = document.createElement('div');
+    if(i<confession.jpegData.headerSize){
+      newElement.className = "binary_data_chunk header_data";
+    }
+    else{
+      newElement.className = "binary_data_chunk";
+    }
+    newElement.innerText = text;
+    children.push(newElement);
   }
-  else{
-    aboutPage.style.visibility = 'hidden'
-  }
-}
-
-function setErrorMessage(message){
-  document.getElementById("error_text_container").innerText = message;
-}
-
-function clearError(){
-  document.getElementById("error_text_container").innerText = '';
-}
-
-function openFileSelector(){
-  document.getElementById("file_selector").click();
+  const container = document.getElementById('binary_data_container');
+  container.replaceChildren(...children);
 }
 
 function convertImageToBuffer(bitmap){
@@ -69,7 +79,7 @@ function convertImageToBuffer(bitmap){
   //convert canvas to blob, then array buffer, and load it!
   canvas.toBlob((blob) => {
     loadImageIntoDom(blob);
-  },'image/jpeg',JPEGConversionQuality);
+  },'image/jpeg',confession.JPEGCompressionQuality);
 }
 
 function loadImageIntoDom(imgData){
@@ -84,7 +94,9 @@ function loadImageIntoDom(imgData){
 
   //read in the file
   const reader_url = new FileReader();
-  reader_url.addEventListener("load",() => {document.getElementById('original_image').src = reader_url.result;});
+  reader_url.addEventListener("load",() => {
+    document.getElementById('original_image').src = reader_url.result;
+  });
   reader_url.readAsDataURL(imgData);
 }
 
@@ -128,43 +140,61 @@ async function transcodeFileToJPEG(file){
   }
 }
 
-function loadFile(event){
+function handleFileInput(event){
   const files = event.target.files;
   //if there are files, read em!
   if (files && files.length) {
-    //if the file isn't a jpeg/if it's too big, rencode it as a small jpeg
-    if(files[0].type != 'image/jpeg' || files[0].size > imageSizeLimit){
-      if(files[0].type != 'image/jpeg')
-        setErrorMessage('converting image to JPEG...');
-      else
-        setErrorMessage('resizing image...');
-      //loading animation
-      document.getElementById('original_image').src = './images/LAB.webp';
-      transcodeFileToJPEG(files[0]);
-    }
-    //if the image is a small jpg, load it normally
-    else{
-      loadImageIntoDom(files[0]);
-    }
+    loadFile(files[0]);
   }
 }
 
-function saveImage(){
+function loadFile(file){
+  confession.originalFile = file;
+  //if the file isn't a jpeg/if it's too big, re-encode it as a small jpeg
+  if(file.type != 'image/jpeg' || file.size > imageSizeLimit){
+    if(file.type != 'image/jpeg')
+      setErrorMessage('converting image to JPEG...');
+    else
+      setErrorMessage('resizing image...');
+    //loading animation
+    document.getElementById('original_image').src = './images/LAB.webp';
+    transcodeFileToJPEG(file);
+  }
+  //if the image is a small jpg, load it normally
+  else{
+    loadImageIntoDom(file);
+  }
+}
+
+function saveImageFile(){
   const htmlTextInputElement = document.getElementById("text_input_area");
 
   //get object URL
-  const objectURL = stringToURL(binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index));
+  const objectURL = stringToURL(confession.binaryData.slice(0,confession.entryIndex)+htmlTextInputElement.value+confession.binaryData.slice(confession.entryIndex));
 
   //trigger a download
   const link = document.createElement('a');
   link.href = objectURL;
   link.download = 'confession.jpeg';  // desired filename
   link.click();
+  URL.revokeObjectURL(objectURL);
+}
+
+function saveTextFile(){
+  const htmlTextInputElement = document.getElementById("text_input_area");
+  const text = confession.binaryData.slice(0,confession.entryIndex)+htmlTextInputElement.value+confession.binaryData.slice(confession.entryIndex);
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = "confession.txt"; // Sets the default file name
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function commitTextAndStartNewEntry(){
   const htmlTextInputElement = document.getElementById("text_input_area");
-  const newString = binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index);
+  const newString = confession.binaryData.slice(0,confession.entryIndex)+htmlTextInputElement.value+confession.binaryData.slice(confession.entryIndex);
   htmlTextInputElement.value = "";
 
   //convert datastring to uint8 array
@@ -173,38 +203,27 @@ function commitTextAndStartNewEntry(){
   for(let i = 0; i<newString.length; i++){
     byteData[i] = newString.charCodeAt(i);
   }
-  binaryDataString = bufferToBinaryString(byteData);
-  document.getElementById('original_text').innerText = binaryDataString;
-}
-
-function sliderClickHandler(event){
-  //total width of the scrollbar
-  const targetHeight = event.srcElement.clientHeight;
-  //location of click within scrollbar
-  const clickPos = event.offsetY;
-  getBytePositionFromPercent(clickPos/targetHeight);
-}
-
-function sliderUnclickHandler(){
+  confession.binaryData = bufferToBinaryString(byteData);
+  buildTextPreviewDivs();
 }
 
 function getBytePositionFromPercent(ratio){
   let newIndex;
   //if ur in a predefined 'header zone', then scale the position relative to the header
   if(ratio < headerZone){
-    newIndex = ratio * 1/headerZone * jpegData.headerSize;
+    newIndex = ratio * 1/headerZone * confession.jpegData.headerSize;
   }
   else{
     //when ratio == 1, this needs to be binaryDataString.length
-    //when ratio == headerZone, this needs to be jpegData.headerSize
+    //when ratio == headerZone, this needs to be confession.jpegData.headerSize
     //so with a simple map_range, it'd be:
-    // Math.map(ratio,headerZone,1.0,jpegData.headerSize,binaryDataString.length);
+    // Math.map(ratio,headerZone,1.0,confession.jpegData.headerSize,binaryDataString.length);
     
     //// Source - https://stackoverflow.com/a/5732390
     // Posted by Alok Singhal
     // Retrieved 2026-02-12, License - CC BY-SA 3.0
     // output = output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
-    newIndex = jpegData.headerSize + ((binaryDataString.length - jpegData.headerSize) / (1.0 - headerZone)) * (ratio - headerZone);
+    newIndex = confession.jpegData.headerSize + ((confession.binaryData.length - confession.jpegData.headerSize) / (1.0 - headerZone)) * (ratio - headerZone);
 
   } 
   setNewIndex(newIndex);
@@ -212,23 +231,86 @@ function getBytePositionFromPercent(ratio){
 
 function handleScroll(event){
   //increment index
-  const newIndex  = Math.min(Math.max(textEntryCursor.index + (event.deltaY),0),binaryDataString.length);
+  const newIndex  = Math.min(Math.max(confession.entryIndex + (event.deltaY),0),confession.binaryData.length);
   setNewIndex(newIndex);
 }
 
 function setNewIndex(index){
-  textEntryCursor.index = Math.max(Math.min(Math.trunc(index),binaryDataString.length),0);
-  const ratio = textEntryCursor.index<jpegData.headerSize?
-    (textEntryCursor.index/jpegData.headerSize * headerZone):
-    (headerZone + ((1.0 - headerZone) / (binaryDataString.length - jpegData.headerSize) * (index - jpegData.headerSize)));
+  confession.entryIndex = Math.max(Math.min(Math.trunc(index),confession.binaryData.length),0);
+  const ratio = confession.entryIndex<confession.jpegData.headerSize?
+    (confession.entryIndex/confession.jpegData.headerSize * headerZone):
+    (headerZone + ((1.0 - headerZone) / (confession.binaryData.length - confession.jpegData.headerSize) * (index - confession.jpegData.headerSize)));
   document.body.style.setProperty("--scrollbar-percent",ratio);
-  document.body.style.setProperty("--byte-scrollbar-color",textEntryCursor.index<jpegData.headerSize?'rgb(0, 255, 174)':'rgb(255,0,100)');
+  document.body.style.setProperty("--byte-scrollbar-color",confession.entryIndex<confession.jpegData.headerSize?'rgb(0, 255, 174)':'rgb(255,0,100)');
 
-  document.getElementById('byte_display').innerText = `byte ${textEntryCursor.index}`;
-
+  document.getElementById('byte_display').innerText = `byte ${confession.entryIndex}`;
+  insertText(confession.entryIndex);
   recompileImage();
-  const textContainer = document.getElementById('binary_text_container');
-  textContainer.scrollTop = Math.max(textContainer.scrollHeight * textEntryCursor.index/binaryDataString.length -textContainer.clientHeight/2,0);
+  const textContainer = document.getElementById('binary_data_container');
+  textContainer.scrollTop = Math.max(textContainer.scrollHeight * confession.entryIndex/confession.binaryData.length -textContainer.clientHeight/2,0);
+}
+
+function updateSliderVisual(val){
+  const element = document.getElementById('slider_display');
+  const bounds = element.getBoundingClientRect();
+  const charWidth = bounds.width/50;
+  const amount =  (parseFloat(val))*bounds.width/charWidth;
+  let str = "[";
+  for(let i = 1; i<49; i++){
+    if(i < amount){
+      str += "+";
+      if(i+1 >= amount){
+        str+="]";
+        i++;
+      }
+    }
+    else{
+      str+="-";
+    }
+  }
+  str+="]";
+  element.innerText = str;
+}
+
+function insertText(index){
+  const whichDivIndex = Math.trunc(index / confession.maxChunkSize);
+
+  // clear out old display
+  const oldDiv = document.getElementById('active_data_chunk');
+  if(oldDiv){
+    oldDiv.id = "";
+    const parent = document.getElementById('binary_data_container');
+    parent.removeChild(document.getElementById('inserted_data_chunk'));
+  }
+  const currentDiv = document.getElementsByClassName('binary_data_chunk')[whichDivIndex];
+  if(currentDiv){
+    //hide the current div
+    currentDiv.id = 'active_data_chunk';
+
+    //create a container for the new stuff
+    const container = document.createElement('div');
+    container.id = "inserted_data_chunk";
+    const inserted = document.createElement('span');
+    inserted.id = "inserted_data";
+    const htmlTextInputElement = document.getElementById("text_input_area");
+    inserted.innerText = htmlTextInputElement.value == ""?"[insert confession here]":htmlTextInputElement.value;
+    let pre = "";
+    let post = "";
+
+    //if there's text in this chunk that comes before the insertion point
+    if(index%confession.maxChunkSize){
+      pre = confession.binaryData.slice(whichDivIndex*confession.maxChunkSize,index);
+    }
+    //if there's text that comes after the insertion point
+    if((index%confession.maxChunkSize) < (confession.maxChunkSize - 1)){
+      post = confession.binaryData.slice(index,confession.maxChunkSize*(whichDivIndex+1));
+    }
+
+    container.appendChild(document.createTextNode(pre));
+    container.appendChild(inserted);
+    container.appendChild(document.createTextNode(post));
+    currentDiv.insertAdjacentElement('beforebegin',container);
+  }
 }
 
 function handleDrag(event){
@@ -241,10 +323,10 @@ function handleDrag(event){
   }
 }
 function moveByteIndexUp(){
-  setNewIndex(textEntryCursor.index-1);
+  setNewIndex(confession.entryIndex-1);
 }
 function moveByteIndexDown(){
-  setNewIndex(textEntryCursor.index+1);
+  setNewIndex(confession.entryIndex+1);
 }
 
 function stringToURL(dataString){
@@ -261,12 +343,12 @@ function stringToURL(dataString){
 
 function recompileImage(){
   const htmlTextInputElement = document.getElementById("text_input_area");
-  const url = stringToURL(binaryDataString.slice(0,textEntryCursor.index)+htmlTextInputElement.value+binaryDataString.slice(textEntryCursor.index));
+  const url = stringToURL(confession.binaryData.slice(0,confession.entryIndex)+htmlTextInputElement.value+confession.binaryData.slice(confession.entryIndex));
   const newImg = document.createElement('img');
   //add an error event listener
   newImg.addEventListener("error", (event) => {
     setErrorMessage("error writing image :( try another byte location");
-    document.getElementById('processed_image').src = './images/xp_error.png'
+    document.getElementById('processed_image').src = null;
   });
   
   newImg.src = url;
@@ -280,7 +362,7 @@ function recompileImage(){
 function bufferToBinaryString(buffer){
   let binaryString = '';
   const bytes = new Uint8Array(buffer);
-  jpegData = {...parseJpegHeader(bytes)};
+  confession.jpegData = {...parseJpegHeader(bytes)};
   const len = bytes.byteLength;
   for(let i = 0; i<len; i++){
     binaryString += String.fromCharCode(bytes[i]);
@@ -289,23 +371,43 @@ function bufferToBinaryString(buffer){
 }
 
 function loadNewImage(buffer){
-  binaryDataString = bufferToBinaryString(buffer);
-  document.getElementById('original_text').innerText = binaryDataString;
+  confession.binaryData = bufferToBinaryString(buffer);
+  // document.getElementById('original_text').innerText = confession.binaryData;
+  buildTextPreviewDivs();
   recompileImage();
 }
 
 function setup(){
   //load in in the initial image
   fetch(defaultImageAddress)
-    .then(result => result.arrayBuffer())
+    .then(result => {
+      return result.arrayBuffer();
+    })
     .then(buffer => {
+      confession.originalFile = new File([buffer], "default.jpeg", { type: "image/jpeg" || buffer.type });
       loadNewImage(buffer);
+      updateSliderVisual(confession.JPEGCompressionQuality);
     });
   //set the original image
   document.getElementById('original_image').src = defaultImageAddress;
 }
 
 window.onload = setup;
-/*okay so the problem is that i 
-want to save a jpeg and open it in a text editor and see the text i wrote into it
-*/
+
+function setErrorMessage(message){
+  document.getElementById("error_text_container").innerText = message;
+}
+
+function clearError(){
+  document.getElementById("error_text_container").innerText = '';
+}
+
+function openFileSelector(){
+  document.getElementById("file_selector").click();
+}
+
+function setCompressionQuality(val){
+  confession.JPEGCompressionQuality = val;
+  loadFile(confession.originalFile);
+  recompileImage();
+}
